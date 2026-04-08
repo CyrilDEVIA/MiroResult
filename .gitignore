@@ -1,4 +1,40 @@
+# Environnement
+.env
+.env.*
+!.env.example
+
+# Dépendances
 node_modules/
+
+# Build
 dist/
+build/
+
+# Logs
 *.log
+logs/
+
+# Base de données
+*.db
+*.sqlite
+
+# Deploy
 constants.deploy.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Uploads (données sensibles)
+api/uploads/*
+!api/uploads/.gitkeep
+
+# Temporaire
+_TMP_*
+
+# Prisma
+api/prisma/migrations/

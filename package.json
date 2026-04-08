@@ -1,0 +1,13 @@
+{
+  "name": "MiroResult",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix api\" \"npm run dev --prefix frontend\"",
+    "dev:api": "npm run dev --prefix api",
+    "dev:front": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
