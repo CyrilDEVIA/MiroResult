@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  role         String       @default("admin")
+  createdAt    DateTime     @default(now())
+  simulations  Simulation[]
+}
+
+model Simulation {
+  id        String   @id @default(uuid())
+  userId    String
+  filename  String
+  rawData   String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  report    Report?
+}
+
+model Report {
+  id             String           @id @default(uuid())
+  simulationId   String           @unique
+  scoreGlobal    Int?
+  scoresDetail   String?
+  summary        String?
+  createdAt      DateTime         @default(now())
+  simulation     Simulation       @relation(fields: [simulationId], references: [id])
+  recommendations Recommendation[]
+}
+
+model Recommendation {
+  id        String   @id @default(uuid())
+  reportId  String
+  content   String
+  priority  String   @default("medium")
+  createdAt DateTime @default(now())
+  report    Report   @relation(fields: [reportId], references: [id])
+}
