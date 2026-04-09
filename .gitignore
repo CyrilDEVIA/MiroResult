@@ -36,5 +36,9 @@ api/uploads/*
 # Temporaire
 _TMP_*
 
-# Prisma
-api/prisma/migrations/
+# Prisma — db locale uniquement, pas les migrations
+api/prisma/*.db
+api/prisma/*.db-journal
+
+# documentation
+documents/
