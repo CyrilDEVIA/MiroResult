@@ -1,21 +1,29 @@
-// frontend/src/App.tsx
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'sonner'
+import { AuthProvider } from '@/context/AuthContext'
+import { ProtectedRoute } from '@/components/common/ProtectedRoute'
 import LoginPage from '@/features/auth/LoginPage'
-import RegisterPage from '@/features/auth/RegisterPage'
-import ForgotPasswordPage from '@/features/auth/ForgotPasswordPage'
-import ResetPasswordPage from '@/features/auth/ResetPasswordPage'
 import DashboardPage from '@/features/dashboard/DashboardPage'
+import SimulationsPage from '@/features/simulations/SimulationsPage'
+import ReportPage from '@/features/reports/ReportPage'
+import RapportPage from '@/features/simulations/RapportPage'
+import SettingsPage from '@/features/admin/SettingsPage'
 
-function App() {
+export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<DashboardPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-    </Routes>
+    <AuthProvider>
+      <Toaster position="bottom-right" richColors />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/simulations" element={<SimulationsPage />} />
+          <Route path="/simulations/:id/report" element={<ReportPage />} />
+          <Route path="/simulations/:id/rapport" element={<RapportPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   )
 }
-
-export default App

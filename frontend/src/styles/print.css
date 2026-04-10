@@ -1,0 +1,76 @@
+/* ─── MiroResult — Styles impression PDF ──────────────────────────────────── */
+
+/* Marges A4 + numérotation pied de page */
+@page {
+  size: A4;
+  margin: 2cm;
+  @bottom-right {
+    content: "Page " counter(page);
+    font-size: 9pt;
+    color: #94a3b8;
+    font-family: sans-serif;
+  }
+}
+
+@media print {
+  /* Masquer les éléments non imprimables */
+  nav,
+  header,
+  aside,
+  .no-print,
+  button {
+    display: none !important;
+  }
+
+  /* Reset body */
+  body {
+    background: white !important;
+    font-size: 11pt;
+    color: #1e293b;
+  }
+
+  /* Forcer les couleurs exactes (badges colorés, fonds) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Éviter les coupures à l'intérieur des cards et sections */
+  .card,
+  .metric-card,
+  .ai-analysis-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Bordures visibles en impression */
+  .border {
+    border-style: solid !important;
+  }
+
+  .border-green-200 { border-color: #bbf7d0 !important; }
+  .border-red-200   { border-color: #fecaca !important; }
+  .border-slate-200 { border-color: #e2e8f0 !important; }
+  .border-green-400 { border-color: #4ade80 !important; }
+  .border-blue-400  { border-color: #60a5fa !important; }
+  .border-red-400   { border-color: #f87171 !important; }
+
+  /* Fonds de badges — forcer les couleurs Tailwind */
+  .badge-success { background-color: #dcfce7 !important; color: #166534 !important; }
+  .badge-warning { background-color: #fef9c3 !important; color: #854d0e !important; }
+  .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
+  .badge-info    { background-color: #dbeafe !important; color: #1e40af !important; }
+
+  /* Fonds de sections */
+  .bg-green-50 { background-color: #f0fdf4 !important; }
+  .bg-red-50   { background-color: #fef2f2 !important; }
+  .bg-gray-50  { background-color: #f9fafb !important; }
+  .bg-slate-100 { background-color: #f1f5f9 !important; }
+
+  /* Grid scénarios — 3 colonnes forcées même en print */
+  .scenarios-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12pt !important;
+  }
+}

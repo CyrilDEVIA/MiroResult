@@ -1,3 +1,82 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+
+  h1 { @apply text-3xl font-medium text-slate-900; }
+  h2 { @apply text-xl font-medium text-slate-900; }
+  h3 { @apply text-base font-medium text-slate-900; }
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-slate-200 rounded-xl p-5;
+  }
+
+  .metric-card {
+    @apply bg-slate-100 rounded-lg p-4;
+  }
+
+  .btn-primary {
+    @apply bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors;
+  }
+
+  .btn-accent {
+    @apply bg-blue-800 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-900 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-slate-900 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success { @apply bg-green-100 text-green-800; }
+  .badge-warning { @apply bg-yellow-100 text-yellow-800; }
+  .badge-danger  { @apply bg-red-100 text-red-800; }
+  .badge-info    { @apply bg-blue-100 text-blue-800; }
+
+  .progress-bar {
+    @apply h-1.5 bg-slate-200 rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full rounded-full bg-blue-700 transition-all duration-500;
+  }
+
+  .nav-link {
+    @apply text-sm text-slate-500 px-4 py-2.5 hover:text-slate-900 transition-colors;
+  }
+
+  .nav-link-active {
+    @apply text-sm text-blue-800 font-medium px-4 py-2.5 border-b-2 border-blue-800;
+  }
+
+  .sidebar-item {
+    @apply text-sm text-slate-400 px-3 py-2 rounded-md hover:bg-slate-800 hover:text-white transition-colors cursor-pointer;
+  }
+
+  .sidebar-item-active {
+    @apply text-sm text-white bg-slate-800 px-3 py-2 rounded-md;
+  }
+}
+
+@media print {
+  aside { display: none !important; }
+
+  .bg-green-100 { background-color: #dcfce7 !important; }
+  .bg-yellow-100 { background-color: #fef9c3 !important; }
+  .bg-red-100 { background-color: #fee2e2 !important; }
+  .bg-blue-100 { background-color: #dbeafe !important; }
+
+  .text-green-700, .text-green-800 { color: #166534 !important; }
+  .text-yellow-700, .text-yellow-800 { color: #854d0e !important; }
+  .text-red-700, .text-red-800 { color: #991b1b !important; }
+  .text-blue-800 { color: #1e40af !important; }
+}

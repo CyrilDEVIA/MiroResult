@@ -41,5 +41,6 @@ api/prisma/*.db
 api/prisma/*.db-journal
 
 # documentation
-documents/DECISIONS.md
+documents/*.md
+DECISIONS.md
 PORTS.md

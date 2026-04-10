@@ -1,0 +1,12 @@
+{
+  "active": null,
+  "providers": [
+    {
+      "id": "example-1",
+      "name": "Mon Provider",
+      "baseUrl": "https://api.exemple.com/v1",
+      "apiKey": "",
+      "model": "nom-du-modele"
+    }
+  ]
+}

@@ -17,14 +17,27 @@ model User {
 }
 
 model Simulation {
-  id        String   @id @default(uuid())
-  userId    String
-  filename  String
-  rawData   String
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  report    Report?
+  id              String           @id @default(uuid())
+  userId          String
+  filename        String
+  filePath        String?
+  rawData         String
+  status          String           @default("pending")
+  aiAnalysis      String?
+  createdAt       DateTime         @default(now())
+  user            User             @relation(fields: [userId], references: [id])
+  report          Report?
+  analysisResults AnalysisResult[]
+}
+
+model AnalysisResult {
+  id           String     @id @default(cuid())
+  simulationId String
+  provider     String
+  model        String
+  rawText      String
+  createdAt    DateTime   @default(now())
+  simulation   Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
 }
 
 model Report {
@@ -32,6 +45,7 @@ model Report {
   simulationId   String           @unique
   scoreGlobal    Int?
   scoresDetail   String?
+  scoresV2       String?
   summary        String?
   createdAt      DateTime         @default(now())
   simulation     Simulation       @relation(fields: [simulationId], references: [id])

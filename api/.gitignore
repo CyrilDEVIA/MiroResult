@@ -1,4 +1,6 @@
 .env
 .env.local
+.env.ia
+providers.json
 node_modules/
 dist/
