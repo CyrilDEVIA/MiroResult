@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
+import DOMPurify from 'dompurify'
 import api from '@/services/api'
 import { VerdictCard } from '@/components/ui/ScoreGlobal'
 import { FavorablesSection, BlockagesSection } from '@/components/ui/ScoreDetail'
@@ -66,15 +68,42 @@ interface AnalysisJson {
   }
 }
 
+const analysisJsonSchema = z.object({
+  verdict: z.object({
+    decision: z.enum(['lancer', 'pivoter', 'abandonner']),
+    score_viabilite: z.number().int().min(0).max(100),
+    resume: z.string(),
+  }),
+  favorables: z.array(z.object({
+    titre: z.string(),
+    detail: z.string(),
+    force: z.number().int().min(0).max(100),
+  })),
+  blocages: z.array(z.object({
+    titre: z.string(),
+    detail: z.string(),
+    severite: z.number().int().min(0).max(100),
+  })),
+  composition: z.object({
+    hommes_pct: z.number().int().min(0).max(100),
+    femmes_pct: z.number().int().min(0).max(100),
+    tranches_age: z.array(z.object({ label: z.string(), pct: z.number() })),
+    profils: z.array(z.object({ label: z.string(), pct: z.number() })),
+    territoire: z.string(),
+  }),
+  conditions_succes: z.array(z.string()),
+  narrative: z.object({
+    synthese: z.string(),
+    dynamiques: z.string(),
+  }),
+})
+
 function parseAnalysisJson(text: string): AnalysisJson | null {
   const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
   try {
-    const parsed = JSON.parse(cleaned) as AnalysisJson
-    if (!parsed?.verdict?.decision) return null
-    if (typeof parsed?.verdict?.score_viabilite !== 'number') return null
-    if (!Array.isArray(parsed?.favorables)) return null
-    if (!Array.isArray(parsed?.blocages)) return null
-    return parsed
+    const result = analysisJsonSchema.safeParse(JSON.parse(cleaned))
+    if (!result.success) return null
+    return result.data as AnalysisJson
   } catch {
     return null
   }
@@ -115,7 +144,7 @@ function StructuredAnalysis({ data: aData }: { data: AnalysisJson }) {
             <h4 className="text-xs font-semibold uppercase tracking-widest text-blue-700 flex items-center gap-1.5 mb-3">
               <span aria-hidden="true">📊</span> Synthèse exécutive
             </h4>
-            <p className="text-sm text-slate-700 leading-relaxed">{aData.narrative.synthese}</p>
+            <p className="text-sm text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(aData.narrative.synthese) }} />
           </div>
         )}
         {aData.narrative.dynamiques && (
@@ -123,7 +152,7 @@ function StructuredAnalysis({ data: aData }: { data: AnalysisJson }) {
             <h4 className="text-xs font-semibold uppercase tracking-widest text-violet-700 flex items-center gap-1.5 mb-3">
               <span aria-hidden="true">🔄</span> Dynamiques émergentes
             </h4>
-            <p className="text-sm text-slate-700 leading-relaxed">{aData.narrative.dynamiques}</p>
+            <p className="text-sm text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(aData.narrative.dynamiques) }} />
           </div>
         )}
       </div>
@@ -357,13 +386,27 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
   const [selectedProviderId, setSelectedProviderId] = useState<string>('')
   const [providersLoading, setProvidersLoading] = useState(true)
 
+  const afterprintHandlerRef = useRef<(() => void) | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (afterprintHandlerRef.current) {
+        window.removeEventListener('afterprint', afterprintHandlerRef.current)
+      }
+    }
+  }, [])
+
   // Chargement providers + analyse existante en parallèle au montage
   useEffect(() => {
+    let isMounted = true
+    const controller = new AbortController()
+
     Promise.all([
-      api.get<ProvidersResponse>('/api/settings/providers'),
-      api.get<HistoryResponse>(`/api/analysis/${simulationId}`),
+      api.get<ProvidersResponse>('/api/settings/providers', { signal: controller.signal }),
+      api.get<HistoryResponse>(`/api/analysis/${simulationId}`, { signal: controller.signal }),
     ])
       .then(([providersRes, historyRes]) => {
+        if (!isMounted) return
         const res = providersRes.data
         setProviders(res.providers)
         setSelectedProviderId(res.active ?? res.providers[0]?.id ?? '')
@@ -378,8 +421,18 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
           setStatus('idle')
         }
       })
-      .catch(() => setStatus('idle'))
-      .finally(() => setProvidersLoading(false))
+      .catch((err) => {
+        if (!isMounted || err?.code === 'ERR_CANCELED') return
+        setStatus('idle')
+      })
+      .finally(() => {
+        if (isMounted) setProvidersLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
   }, [simulationId])
 
   // Mise à jour depuis l'historique (clic sur une entrée dans AnalysisHistory)
@@ -424,11 +477,13 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
     const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
     const name = simulationName ?? simulationId
     document.title = `MiroResult — Analyse — ${name} — ${date}`
-    const restore = () => {
+    const handler = () => {
       document.title = original
-      window.removeEventListener('afterprint', restore)
+      window.removeEventListener('afterprint', handler)
+      afterprintHandlerRef.current = null
     }
-    window.addEventListener('afterprint', restore)
+    afterprintHandlerRef.current = handler
+    window.addEventListener('afterprint', handler)
     window.print()
   }
 

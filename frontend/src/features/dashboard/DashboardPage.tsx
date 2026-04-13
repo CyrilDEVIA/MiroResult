@@ -222,8 +222,8 @@ export default function DashboardPage() {
                       isAnimationActive
                       animationDuration={500}
                     >
-                      {scoreData.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill} />
+                      {scoreData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -302,7 +302,7 @@ export default function DashboardPage() {
                           {new Date(sim.createdAt).toLocaleDateString('fr-FR')}
                         </td>
                         <td className="px-5 py-3 text-right">
-                          {sim.status === 'processed' && (
+                          {(sim.status === 'processed' || sim.report !== null) && (
                             <Link
                               to={`/simulations/${sim.id}/report`}
                               className="text-sm text-blue-700 hover:text-blue-900 hover:underline"

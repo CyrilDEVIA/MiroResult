@@ -1,12 +1,29 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
+import rateLimit from 'express-rate-limit'
 import { authMiddleware } from '../middleware/auth.middleware'
 import { prisma } from '../db/prisma'
 import { analyzeSimulation, readProvidersFile, writeActiveProvider } from '../services/aiProvider'
+import { AuthenticatedRequest } from '../types'
 
 const router = Router()
 
 const auth = authMiddleware as unknown as (req: Request, res: Response, next: NextFunction) => void
+
+const llmLimiter = rateLimit({
+  windowMs: 60 * 60_000,
+  max: 10,
+  keyGenerator: (req) => (req as AuthenticatedRequest).user?.id ?? req.ip ?? 'anonymous',
+  message: { error: 'Limite de requêtes IA atteinte (10/heure). Réessayez plus tard.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+// ─── Schema params ────────────────────────────────────────────────────────────
+
+const paramsSchema = z.object({
+  simulationId: z.string().uuid('simulationId invalide'),
+})
 
 // ─── Schema de sortie ────────────────────────────────────────────────────────
 
@@ -25,10 +42,11 @@ const analysisListSchema = z.array(analysisEntrySchema)
 
 router.get('/:simulationId', auth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { simulationId } = req.params
+    const { simulationId } = paramsSchema.parse(req.params)
+    const authReq = req as AuthenticatedRequest
 
     const results = await prisma.analysisResult.findMany({
-      where: { simulationId },
+      where: { simulationId, simulation: { userId: authReq.user.id } },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -55,14 +73,15 @@ const postBodySchema = z.object({
   providerId: z.string().optional(),
 })
 
-router.post('/:simulationId', auth, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:simulationId', auth, llmLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { simulationId } = req.params
+    const { simulationId } = paramsSchema.parse(req.params)
+    const authReq = req as AuthenticatedRequest
     const force = req.query.force === 'true'
     const { providerId } = postBodySchema.parse(req.body)
 
-    const simulation = await prisma.simulation.findUnique({
-      where: { id: simulationId },
+    const simulation = await prisma.simulation.findFirst({
+      where: { id: simulationId, userId: authReq.user.id },
     })
 
     if (!simulation) {
@@ -109,8 +128,12 @@ router.post('/:simulationId', auth, async (req: Request, res: Response, next: Ne
       }),
     ])
 
-    // Mettre à jour le provider actif (non-bloquant)
-    writeActiveProvider(provider.id)
+    // Mettre à jour le provider actif
+    try {
+      await writeActiveProvider(provider.id)
+    } catch (err) {
+      console.warn('[analysis] writeActiveProvider :', err)
+    }
 
     res.json({ analysis, provider: provider.name, cached: false })
   } catch (err) {

@@ -2,6 +2,8 @@ import path from 'path'
 import { readFile, writeFile } from 'fs/promises'
 import { z } from 'zod'
 import { AppError } from '../types'
+import { PROMPT_MIROFISH } from '../config/prompts'
+import { LLM_TIMEOUT_MS } from '../config/constants'
 
 const PROVIDERS_PATH = path.resolve(__dirname, '../../providers.json')
 
@@ -126,17 +128,6 @@ const CONTRAINTES = `Contraintes absolues :
 - "conditions_succes" : 2 à 4 conditions nécessaires au succès.
 - Toutes les valeurs texte en FRANÇAIS.`
 
-const SYSTEM_PROMPT_PASSE1 = `Tu es un expert en analyse de simulations multi-agents (MiroFish) pour des décisions d'investissement et de partenariat.
-Tu reçois les données brutes d'une simulation. Analyse-les et retourne UNIQUEMENT un objet JSON valide.
-
-Objectif : aider à décider d'investir ou non et convaincre des partenaires.
-Le rapport doit être décisionnel, pas technique.
-
-Structure JSON attendue (respecter exactement les noms de champs et types) :
-
-${JSON_SCHEMA_DESCRIPTION}
-
-${CONTRAINTES}`
 
 const SYSTEM_PROMPT_PASSE2 = `Tu es un expert en analyse de simulations multi-agents (MiroFish) pour des décisions d'investissement.
 Tu reçois une première analyse JSON. Ta mission : la critiquer puis produire une version finale améliorée.
@@ -180,7 +171,7 @@ async function callLLM(
         { role: 'user', content: userContent },
       ],
     }),
-    signal: AbortSignal.timeout(45000),
+    signal: AbortSignal.timeout(LLM_TIMEOUT_MS),
   })
 
   if (!res.ok) {
@@ -189,6 +180,11 @@ async function callLLM(
   }
 
   const json = await res.json() as { choices: Array<{ message: { content: string } }> }
+
+  if (!json.choices?.[0]?.message?.content) {
+    throw new AppError('Réponse LLM invalide (choices vide)', 502)
+  }
+
   const rawText = json.choices[0].message.content.trim()
 
   if (DEV) {
@@ -219,7 +215,7 @@ async function runTwoPasses(
   simulationData: string
 ): Promise<{ analysis: string }> {
   // Passe 1 — analyse brute
-  const pass1 = await callLLM(baseUrl, apiKey, model, SYSTEM_PROMPT_PASSE1, simulationData)
+  const pass1 = await callLLM(baseUrl, apiKey, model, PROMPT_MIROFISH, simulationData)
 
   // Passe 2 — auto-critique et consolidation
   const pass2 = await callLLM(baseUrl, apiKey, model, SYSTEM_PROMPT_PASSE2, pass1)

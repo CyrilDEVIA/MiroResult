@@ -53,7 +53,7 @@ export function ProtectedRoute() {
 
       {/* Contenu principal */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-8 py-8">
+        <div className="max-w-screen-2xl mx-auto px-4 py-4">
           <Outlet />
         </div>
       </main>

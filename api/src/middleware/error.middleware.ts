@@ -12,5 +12,6 @@ export function errorMiddleware(
     return
   }
 
+  console.error('[error]', err)
   res.status(500).json({ success: false, message: 'Erreur serveur interne' })
 }

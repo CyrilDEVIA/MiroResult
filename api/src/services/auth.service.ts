@@ -19,8 +19,8 @@ export async function login(email: string, password: string) {
   const secret = process.env.JWT_SECRET
   const expiresIn = process.env.JWT_EXPIRES_IN ?? '24h'
 
-  if (!secret) {
-    throw new AppError('Configuration JWT manquante', 500)
+  if (!secret?.trim()) {
+    throw new AppError('JWT_SECRET manquant', 500)
   }
 
   const token = jwt.sign(

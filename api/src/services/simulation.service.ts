@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { prisma } from '../db/prisma'
 import { AppError } from '../types'
 
+const DEV = process.env.NODE_ENV !== 'production'
+
 // ─── Schéma JSON MiroFish legacy ────────────────────────────────────────────
 
 const miroFishSchema = z.object({
@@ -146,8 +148,8 @@ export function extractAndParseZip(filePath: string): ParsedZip {
       if (ext === '.csv') {
         result.raw_files.push({ name, content: entry.getData().toString('utf8') })
       }
-    } catch {
-      // fichier illisible ou JSON invalide — ignoré silencieusement
+    } catch (err) {
+      if (DEV) console.warn('[simulation] fichier ignoré :', name, (err as Error).message)
     }
   }
 

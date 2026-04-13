@@ -1,8 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
 import { authMiddleware } from '../middleware/auth.middleware'
+import { prisma } from '../db/prisma'
 import { listRecommendations } from '../services/recommendation.service'
-import { AppError } from '../types'
+import { AppError, AuthenticatedRequest } from '../types'
 
 const router = Router()
 
@@ -18,6 +19,12 @@ router.get('/', auth, async (req: Request, res: Response, next: NextFunction) =>
     if (!result.success) {
       throw new AppError('reportId requis et doit être un UUID valide', 400)
     }
+    const authReq = req as AuthenticatedRequest
+    const report = await prisma.report.findFirst({
+      where: { id: result.data.reportId, simulation: { userId: authReq.user.id } },
+      select: { id: true },
+    })
+    if (!report) throw new AppError('Rapport introuvable', 404)
     const recommendations = await listRecommendations(result.data.reportId)
     res.json({ success: true, data: recommendations })
   } catch (err) {

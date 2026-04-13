@@ -20,14 +20,15 @@ model Simulation {
   id              String           @id @default(uuid())
   userId          String
   filename        String
-  filePath        String?
   rawData         String
   status          String           @default("pending")
-  aiAnalysis      String?
   createdAt       DateTime         @default(now())
-  user            User             @relation(fields: [userId], references: [id])
-  report          Report?
+  aiAnalysis      String?
+  filePath        String?
+  htmlReport      String?
   analysisResults AnalysisResult[]
+  report          Report?
+  user            User             @relation(fields: [userId], references: [id])
 }
 
 model AnalysisResult {
@@ -41,15 +42,15 @@ model AnalysisResult {
 }
 
 model Report {
-  id             String           @id @default(uuid())
-  simulationId   String           @unique
-  scoreGlobal    Int?
-  scoresDetail   String?
-  scoresV2       String?
-  summary        String?
-  createdAt      DateTime         @default(now())
-  simulation     Simulation       @relation(fields: [simulationId], references: [id])
+  id              String           @id @default(uuid())
+  simulationId    String           @unique
+  scoreGlobal     Int?
+  scoresDetail    String?
+  summary         String?
+  createdAt       DateTime         @default(now())
+  scoresV2        String?
   recommendations Recommendation[]
+  simulation      Simulation       @relation(fields: [simulationId], references: [id])
 }
 
 model Recommendation {

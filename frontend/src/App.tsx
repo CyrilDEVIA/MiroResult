@@ -6,7 +6,6 @@ import LoginPage from '@/features/auth/LoginPage'
 import DashboardPage from '@/features/dashboard/DashboardPage'
 import SimulationsPage from '@/features/simulations/SimulationsPage'
 import ReportPage from '@/features/reports/ReportPage'
-import RapportPage from '@/features/simulations/RapportPage'
 import SettingsPage from '@/features/admin/SettingsPage'
 
 export default function App() {
@@ -19,7 +18,6 @@ export default function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/simulations" element={<SimulationsPage />} />
           <Route path="/simulations/:id/report" element={<ReportPage />} />
-          <Route path="/simulations/:id/rapport" element={<RapportPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

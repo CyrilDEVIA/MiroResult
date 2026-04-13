@@ -37,7 +37,7 @@ export function KpiCard({
     <div className="bg-white border border-slate-100 shadow-sm rounded-xl p-6 flex flex-col gap-2 min-h-[100px]">
       <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{label}</p>
       {chart && <div className="my-1">{chart}</div>}
-      <p className={`text-4xl font-bold leading-none ${colorClass}`}>{value}</p>
+      <p className={`font-bold leading-none ${typeof value === 'string' && value.length > 8 ? 'text-xl' : 'text-4xl'} ${colorClass}`}>{value}</p>
       {(subtitle || trend) && (
         <p className={`text-xs mt-0.5 ${trend ? TREND_COLOR[trend.direction] : 'text-slate-400'}`}>
           {trend && <span>{TREND_ICON[trend.direction]} </span>}

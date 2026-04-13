@@ -2,9 +2,9 @@
   "name": "MiroResult",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix api\" \"npm run dev --prefix frontend\"",
-    "dev:api": "npm run dev --prefix api",
-    "dev:front": "npm run dev --prefix frontend",
+    "dev": "concurrently \"cd api && npm run dev\" \"cd frontend && npm run dev\"",
+    "dev:api": "cd api && npm run dev",
+    "dev:front": "cd frontend && npm run dev",
     "build": "npm run build --prefix frontend"
   },
   "devDependencies": {

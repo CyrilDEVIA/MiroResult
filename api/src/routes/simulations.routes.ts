@@ -48,12 +48,15 @@ router.post(
           throw new AppError('Impossible de lire le fichier ZIP. Vérifiez que le fichier est valide.', 400)
         }
 
+        const raw = JSON.stringify(parsed)
+        if (raw.length > 5 * 1024 * 1024) throw new AppError('rawData dépasse 5 MB', 413)
+
         const simulation = await prisma.simulation.create({
           data: {
             userId: authReq.user.id,
-            filename: req.file.originalname,
+            filename: path.basename(req.file.originalname),
             filePath: req.file.path,
-            rawData: JSON.stringify(parsed),
+            rawData: raw,
             status: 'processed',
           },
         })
@@ -152,12 +155,13 @@ router.delete('/:id', auth, async (req: Request, res: Response, next: NextFuncti
       throw new AppError('Simulation introuvable', 404)
     }
 
-    if (simulation.report) {
-      await prisma.recommendation.deleteMany({ where: { reportId: simulation.report.id } })
-      await prisma.report.delete({ where: { id: simulation.report.id } })
-    }
-
-    await prisma.simulation.delete({ where: { id: simulation.id } })
+    await prisma.$transaction(async (tx) => {
+      if (simulation.report) {
+        await tx.recommendation.deleteMany({ where: { reportId: simulation.report.id } })
+        await tx.report.delete({ where: { id: simulation.report.id } })
+      }
+      await tx.simulation.delete({ where: { id: simulation.id } })
+    })
 
     if (simulation.filePath) {
       try {

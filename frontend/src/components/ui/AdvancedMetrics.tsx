@@ -124,8 +124,8 @@ export function MetricChart({ data, height = 170 }: MetricChartProps) {
           isAnimationActive
           animationDuration={600}
         >
-          {data.map((entry, i) => (
-            <Cell key={i} fill={entry.fill} />
+          {data.map((entry) => (
+            <Cell key={entry.name} fill={entry.fill} />
           ))}
         </Bar>
       </BarChart>
@@ -296,8 +296,8 @@ export function CompositionCharts({ composition }: { composition: CompositionDat
                 isAnimationActive
                 animationDuration={600}
               >
-                {genreData.map((_, i) => (
-                  <Cell key={i} fill={GENRE_COLORS[i]} />
+                {genreData.map((d, i) => (
+                  <Cell key={d.name} fill={GENRE_COLORS[i]} />
                 ))}
               </Pie>
               <Tooltip
@@ -422,8 +422,8 @@ export function SimulationCharts({ segments, freins, trajectoires }: SimulationC
                     isAnimationActive
                     animationDuration={600}
                   >
-                    {freins.map((_, i) => (
-                      <Cell key={i} fill={FREIN_COLORS[i % FREIN_COLORS.length]} />
+                    {freins.map((f, i) => (
+                      <Cell key={f.nom} fill={FREIN_COLORS[i % FREIN_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip

@@ -17,6 +17,7 @@ interface ScoringInput {
 // ─── Utilitaires statistiques ─────────────────────────────────────────────────
 
 function mean(arr: number[]): number {
+  if (arr.length === 0) return 0
   return arr.reduce((s, v) => s + v, 0) / arr.length
 }
 
@@ -39,7 +40,7 @@ function extractNumericValue(obj: Record<string, unknown>): number | null {
 
 function computeAgentDiversity(profiles: unknown[]): number | null {
   const flat = (profiles as unknown[][]).flat()
-  if (flat.length === 0) return 50
+  if (flat.length === 0) return null
 
   const total = flat.length
   const distinct = new Set(
