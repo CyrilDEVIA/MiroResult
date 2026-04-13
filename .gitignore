@@ -45,5 +45,9 @@ Capture/
 documents/*.md
 PORTS.md
 
+# Fichiers internes
+prompt-*.md
+CLEANUP.md
+
 # Providers IA (clés API)
 api/providers.json
