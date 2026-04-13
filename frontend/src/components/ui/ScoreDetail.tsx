@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { progressColor, semanticBg } from '@/utils/score'
 
 function scorePill(s: number): string {
@@ -93,6 +94,7 @@ interface ScoreDetailProps {
 }
 
 export function ScoreDetail({ scores }: ScoreDetailProps) {
+  const { t } = useTranslation()
   const allEntries = Object.entries(scores).sort(([, a], [, b]) => b.score - a.score)
 
   const positive = allEntries.filter(([, d]) => d.score >= 70)
@@ -101,19 +103,19 @@ export function ScoreDetail({ scores }: ScoreDetailProps) {
 
   const GROUPS: GroupConfig[] = [
     {
-      label: 'Points positifs',
+      label: t('score.positive'),
       icon: '✅',
       items: positive,
       bgClass: semanticBg(75),
     },
     {
-      label: "Points d'attention",
+      label: t('score.attention'),
       icon: '⚠️',
       items: attention,
       bgClass: semanticBg(50),
     },
     {
-      label: 'Points critiques',
+      label: t('score.critical'),
       icon: '🔴',
       items: critical,
       bgClass: semanticBg(20),
@@ -124,7 +126,7 @@ export function ScoreDetail({ scores }: ScoreDetailProps) {
 
   return (
     <div className="card space-y-4">
-      <h3>Détail par dimension</h3>
+      <h3>{t('score.dimensionTitle')}</h3>
 
       {hasGroups ? (
         <div className="space-y-3">
@@ -133,7 +135,7 @@ export function ScoreDetail({ scores }: ScoreDetailProps) {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-slate-400">Aucune donnée de dimension disponible.</p>
+        <p className="text-sm text-slate-400">{t('score.noDimension')}</p>
       )}
     </div>
   )
@@ -148,11 +150,12 @@ export interface FavorableItem {
 }
 
 export function FavorablesSection({ items }: { items: FavorableItem[] }) {
+  const { t } = useTranslation()
   if (items.length === 0) return null
   return (
     <div className="border-l-4 border-emerald-500 bg-emerald-50 rounded-r-xl p-5 space-y-4">
       <h4 className="text-xs font-semibold uppercase tracking-widest text-emerald-700 flex items-center gap-1.5">
-        <span aria-hidden="true">✅</span> Signaux favorables
+        <span aria-hidden="true">✅</span> {t('score.favorable')}
       </h4>
       <div className="space-y-4">
         {items.map((item) => (
@@ -186,11 +189,12 @@ export interface BlockageItem {
 }
 
 export function BlockagesSection({ items }: { items: BlockageItem[] }) {
+  const { t } = useTranslation()
   if (items.length === 0) return null
   return (
     <div className="border-l-4 border-red-500 bg-red-50 rounded-r-xl p-5 space-y-4">
       <h4 className="text-xs font-semibold uppercase tracking-widest text-red-700 flex items-center gap-1.5">
-        <span aria-hidden="true">🚧</span> Blocages identifiés
+        <span aria-hidden="true">🚧</span> {t('score.blocages')}
       </h4>
       <div className="space-y-4">
         {items.map((item) => (
@@ -235,6 +239,7 @@ interface PositifsAttentionsProps {
 }
 
 export function PositifsAttentions({ positifs, attentions }: PositifsAttentionsProps) {
+  const { t } = useTranslation()
   if (positifs.length === 0 && attentions.length === 0) return null
 
   return (
@@ -242,7 +247,7 @@ export function PositifsAttentions({ positifs, attentions }: PositifsAttentionsP
       {positifs.length > 0 && (
         <div className="border-l-4 border-emerald-500 bg-emerald-50 rounded-r-xl p-5 space-y-4">
           <h4 className="text-xs font-semibold uppercase tracking-widest text-emerald-700 flex items-center gap-1.5">
-            <span aria-hidden="true">✅</span> Points positifs
+            <span aria-hidden="true">✅</span> {t('score.positive')}
           </h4>
           <div className="space-y-4">
             {positifs.map((item) => (
@@ -269,7 +274,7 @@ export function PositifsAttentions({ positifs, attentions }: PositifsAttentionsP
       {attentions.length > 0 && (
         <div className="border-l-4 border-amber-500 bg-amber-50 rounded-r-xl p-5 space-y-4">
           <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
-            <span aria-hidden="true">⚠️</span> Points d'attention
+            <span aria-hidden="true">⚠️</span> {t('score.attention')}
           </h4>
           <div className="space-y-4">
             {attentions.map((item) => (

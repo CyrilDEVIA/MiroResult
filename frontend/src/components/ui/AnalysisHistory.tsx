@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import api from '@/services/api'
 
@@ -51,6 +52,7 @@ function formatDate(iso: string): string {
 }
 
 export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigger }: Props) {
+  const { t } = useTranslation()
   const [entries, setEntries] = useState<AnalysisEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [relaunching, setRelaunching] = useState(false)
@@ -76,15 +78,15 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
     api
       .get<AnalysisListResponse>(`/api/analysis/${simulationId}`)
       .then(({ data }) => setEntries(data.data))
-      .catch(() => toast.error("Impossible de charger l'historique des analyses"))
+      .catch(() => toast.error(t('analysis.historyLoadError')))
       .finally(() => setLoading(false))
-  }, [simulationId])
+  }, [simulationId, t])
 
   useEffect(() => { loadHistory() }, [loadHistory, refreshTrigger])
 
   async function handleRelance(providerId: string) {
     if (!providerId) {
-      toast.error('Sélectionnez un provider avant de relancer')
+      toast.error(t('analysis.selectProviderFirst'))
       return
     }
     setRelaunching(true)
@@ -95,10 +97,10 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
       )
       onView({ analysis: data.analysis, provider: data.provider ?? '' })
       loadHistory()
-      toast.success('Nouvelle analyse générée')
+      toast.success(t('analysis.newGenerated'))
     } catch (err) {
       const apiErr = err as { response?: { data?: { error?: string } } }
-      toast.error(apiErr?.response?.data?.error ?? "Échec de la relance de l'analyse")
+      toast.error(apiErr?.response?.data?.error ?? t('analysis.relaunchError'))
     } finally {
       setRelaunching(false)
     }
@@ -117,7 +119,7 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
       >
         {providers.map((p) => (
           <option key={p.id} value={p.id} disabled={!p.hasKey}>
-            {p.name}{!p.hasKey ? ' (clé manquante)' : ''}
+            {p.name}{!p.hasKey ? ` (${t('analysis.keyMissing')})` : ''}
           </option>
         ))}
       </select>
@@ -143,7 +145,7 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
   if (loading) {
     return (
       <div className="card mt-4">
-        <p className="text-sm text-slate-400">Chargement de l'historique...</p>
+        <p className="text-sm text-slate-400">{t('analysis.historyLoading')}</p>
       </div>
     )
   }
@@ -151,12 +153,12 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
   if (entries.length === 0) {
     return (
       <div className="card mt-4 space-y-3">
-        <h3 className="text-base font-medium text-slate-700">Historique des analyses</h3>
-        <p className="text-sm text-slate-400">Aucune analyse générée pour cette simulation.</p>
+        <h3 className="text-base font-medium text-slate-700">{t('analysis.historyTitle')}</h3>
+        <p className="text-sm text-slate-400">{t('analysis.historyEmpty')}</p>
         {providers.length === 0 ? (
           <p className="text-xs text-slate-400">
-            Aucun provider configuré.{' '}
-            <a href="/settings" className="text-blue-700 hover:underline">Paramètres</a>
+            {t('analysis.noProvider')}{' '}
+            <a href="/settings" className="text-blue-700 hover:underline">{t('nav.settings')}</a>
           </p>
         ) : (
           <div className="flex items-center gap-3 flex-wrap">
@@ -166,7 +168,7 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
               disabled={relaunching || !canLaunch}
               className={`btn-accent text-sm ${(relaunching || !canLaunch) ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {relaunching ? 'Analyse en cours...' : 'Lancer une analyse'}
+              {relaunching ? t('analysis.analyzing') : t('analysis.launchNew')}
             </button>
           </div>
         )}
@@ -178,9 +180,9 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
     <div className="card mt-4 space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-base font-medium text-slate-700">Historique des analyses</h3>
+          <h3 className="text-base font-medium text-slate-700">{t('analysis.historyTitle')}</h3>
           <span className="badge badge-info">
-            {entries.length} analyse{entries.length > 1 ? 's' : ''}
+            {t(entries.length > 1 ? 'analysis.historyCountAnalyses' : 'analysis.historyCountAnalysis', { count: entries.length })}
           </span>
         </div>
         {providers.length > 0 && (
@@ -211,7 +213,7 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
                   disabled={isDisabled}
                   onChange={() => toggleSelect(entry.id)}
                   className={`w-4 h-4 accent-blue-800 shrink-0 ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                  title={isDisabled ? 'Désélectionnez une entrée pour en sélectionner une autre' : 'Sélectionner pour comparer'}
+                  title={isDisabled ? t('analysis.deselectHint') : t('analysis.selectToCompare')}
                 />
               )}
 
@@ -226,14 +228,14 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
                   onClick={() => onView({ analysis: entry.rawText, provider: entry.provider })}
                   className="btn-secondary text-xs px-3 py-1.5"
                 >
-                  Voir
+                  {t('analysis.viewEntry')}
                 </button>
                 <button
                   onClick={() => handleRelance(selectedProviderId)}
                   disabled={relaunching || !canLaunch}
                   className={`btn-accent text-xs px-3 py-1.5 ${(relaunching || !canLaunch) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {relaunching ? '...' : 'Relancer'}
+                  {relaunching ? '…' : t('analysis.relaunch')}
                 </button>
               </div>
             </div>
@@ -245,19 +247,19 @@ export function AnalysisHistory({ simulationId, onView, onCompare, refreshTrigge
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <p className="text-xs text-slate-400">
             {selected.length === 2
-              ? '2 analyses sélectionnées'
-              : '1 analyse sélectionnée — cochez-en une autre'}
+              ? t('analysis.twoSelected')
+              : t('analysis.oneSelected')}
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelected([])}
               className="text-xs text-slate-400 hover:text-slate-600"
             >
-              Effacer
+              {t('analysis.clearSelection')}
             </button>
             {selected.length === 2 && (
               <button onClick={handleCompare} className="btn-accent text-xs px-3 py-1.5">
-                Comparer les 2 analyses
+                {t('analysis.compareBtn')}
               </button>
             )}
           </div>

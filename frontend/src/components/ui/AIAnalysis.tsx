@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import DOMPurify from 'dompurify'
 import api from '@/services/api'
@@ -112,6 +113,7 @@ function parseAnalysisJson(text: string): AnalysisJson | null {
 // ─── Rendu structuré depuis JSON (nouveau schéma décisionnel) ─────────────────
 
 function StructuredAnalysis({ data: aData }: { data: AnalysisJson }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-4">
       <VerdictCard verdict={aData.verdict} />
@@ -125,7 +127,7 @@ function StructuredAnalysis({ data: aData }: { data: AnalysisJson }) {
 
       {aData.conditions_succes.length > 0 && (
         <div className="card space-y-3">
-          <h3>Conditions de succès</h3>
+          <h3>{t('analysis.successConditions')}</h3>
           <ul className="space-y-2">
             {aData.conditions_succes.map((cond, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
@@ -138,11 +140,11 @@ function StructuredAnalysis({ data: aData }: { data: AnalysisJson }) {
       )}
 
       <div className="card space-y-3">
-        <h3>Analyse narrative</h3>
+        <h3>{t('analysis.narrativeTitle')}</h3>
         {aData.narrative.synthese && (
           <div className="ai-analysis-section print:break-inside-avoid border-l-4 border-blue-500 bg-blue-50 rounded-r-xl p-5">
             <h4 className="text-xs font-semibold uppercase tracking-widest text-blue-700 flex items-center gap-1.5 mb-3">
-              <span aria-hidden="true">📊</span> Synthèse exécutive
+              <span aria-hidden="true">📊</span> {t('analysis.synthese')}
             </h4>
             <p className="text-sm text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(aData.narrative.synthese) }} />
           </div>
@@ -150,7 +152,7 @@ function StructuredAnalysis({ data: aData }: { data: AnalysisJson }) {
         {aData.narrative.dynamiques && (
           <div className="ai-analysis-section print:break-inside-avoid border-l-4 border-violet-500 bg-violet-50 rounded-r-xl p-5">
             <h4 className="text-xs font-semibold uppercase tracking-widest text-violet-700 flex items-center gap-1.5 mb-3">
-              <span aria-hidden="true">🔄</span> Dynamiques émergentes
+              <span aria-hidden="true">🔄</span> {t('analysis.dynamiques')}
             </h4>
             <p className="text-sm text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(aData.narrative.dynamiques) }} />
           </div>
@@ -304,7 +306,7 @@ function renderContent(content: string): JSX.Element[] {
   return elements
 }
 
-function renderRecommendations(content: string): JSX.Element[] {
+function renderRecommendations(content: string, t: (k: string) => string): JSX.Element[] {
   const lines = content.trim().split('\n')
   const elements: JSX.Element[] = []
   let itemIndex = 0
@@ -329,9 +331,9 @@ function renderRecommendations(content: string): JSX.Element[] {
       priority === 'important' ? 'badge badge-warning' :
       'badge'
     const badgeLabel =
-      priority === 'urgent' ? 'Urgent' :
-      priority === 'important' ? 'Important' :
-      'À considérer'
+      priority === 'urgent' ? t('analysis.urgent') :
+      priority === 'important' ? t('analysis.important') :
+      t('analysis.toConsider')
 
     const isFirst = itemIndex === 0
     itemIndex++
@@ -348,6 +350,7 @@ function renderRecommendations(content: string): JSX.Element[] {
 }
 
 function ScenariosGrid({ content }: { content: string }) {
+  const { t } = useTranslation()
   const scenarios = parseScenarios(content)
 
   if (!scenarios) {
@@ -357,15 +360,15 @@ function ScenariosGrid({ content }: { content: string }) {
   return (
     <div className="scenarios-grid grid grid-cols-1 md:grid-cols-3 print:grid-cols-3 gap-3 mt-2">
       <div className="border border-green-400 rounded-xl p-4 bg-white space-y-2">
-        <span className="badge badge-success text-xs">Optimiste</span>
+        <span className="badge badge-success text-xs">{t('analysis.optimiste')}</span>
         <p className="text-sm text-gray-700 leading-relaxed">{scenarios.optimiste || '—'}</p>
       </div>
       <div className="border border-blue-400 rounded-xl p-4 bg-white space-y-2">
-        <span className="badge badge-info text-xs">Neutre</span>
+        <span className="badge badge-info text-xs">{t('analysis.neutre')}</span>
         <p className="text-sm text-gray-700 leading-relaxed">{scenarios.neutre || '—'}</p>
       </div>
       <div className="border border-red-400 rounded-xl p-4 bg-white space-y-2">
-        <span className="badge badge-danger text-xs">Pessimiste</span>
+        <span className="badge badge-danger text-xs">{t('analysis.pessimiste')}</span>
         <p className="text-sm text-gray-700 leading-relaxed">{scenarios.pessimiste || '—'}</p>
       </div>
     </div>
@@ -375,6 +378,7 @@ function ScenariosGrid({ content }: { content: string }) {
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed }: Props) {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<Status>('loading-existing')
   const [data, setData] = useState<AnalysisResponse | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -467,7 +471,7 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
       .catch((err) => {
         clearTimeout(timer)
         const msg = err?.response?.data?.error
-        setErrorMsg(msg ?? "L'analyse IA a échoué. Vérifiez le provider sélectionné dans Paramètres.")
+        setErrorMsg(msg ?? t('analysis.failed'))
         setStatus('error')
       })
   }
@@ -495,8 +499,8 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
     if (providers.length === 0) {
       return (
         <p className="text-xs text-slate-400">
-          Aucun provider configuré.{' '}
-          <a href="/settings" className="text-blue-700 hover:underline">Paramètres</a>
+          {t('analysis.noProvider')}{' '}
+          <a href="/settings" className="text-blue-700 hover:underline">{t('nav.settings')}</a>
         </p>
       )
     }
@@ -509,7 +513,7 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
         >
           {providers.map((p) => (
             <option key={p.id} value={p.id} disabled={!p.hasKey}>
-              {p.name} — {p.model}{!p.hasKey ? ' (clé manquante)' : ''}
+              {p.name} — {p.model}{!p.hasKey ? ` (${t('analysis.keyMissing')})` : ''}
             </option>
           ))}
         </select>
@@ -530,7 +534,7 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
     return (
       <div className="card flex items-center gap-3">
         <div className="w-4 h-4 rounded-full border-2 border-blue-800 border-t-transparent animate-spin shrink-0" />
-        <p className="text-sm text-slate-500">Chargement de l'analyse...</p>
+        <p className="text-sm text-slate-500">{t('analysis.loading')}</p>
       </div>
     )
   }
@@ -541,15 +545,15 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
         <div className="flex items-center gap-3">
           <div className="w-4 h-4 rounded-full border-2 border-blue-800 border-t-transparent animate-spin shrink-0" />
           <p className="text-sm text-slate-700 font-medium">
-            {loadingStep === 1 ? 'Analyse en cours…' : 'Auto-critique et consolidation…'}
+            {loadingStep === 1 ? t('analysis.analyzing') : t('analysis.autocritique')}
           </p>
         </div>
         <div className="flex gap-2">
           <span className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${loadingStep >= 1 ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-400'}`}>
-            1 · Analyse brute
+            {t('analysis.step1')}
           </span>
           <span className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${loadingStep >= 2 ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-400'}`}>
-            2 · Auto-critique
+            {t('analysis.step2')}
           </span>
         </div>
       </div>
@@ -562,7 +566,7 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
         <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
           {errorMsg}
         </p>
-        {renderProviderSelector('Réessayer')}
+        {renderProviderSelector(t('common.retry'))}
       </div>
     )
   }
@@ -571,12 +575,12 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
     return (
       <div className="card space-y-4">
         <div>
-          <h2 className="text-slate-900">Analyse IA</h2>
+          <h2 className="text-slate-900">{t('analysis.title')}</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Aucune analyse disponible. Sélectionnez un provider pour lancer l'analyse.
+            {t('analysis.noAnalysis')}
           </p>
         </div>
-        {renderProviderSelector("Lancer l'analyse")}
+        {renderProviderSelector(t('analysis.launch'))}
       </div>
     )
   }
@@ -592,20 +596,20 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
   const header = (
     <div className="flex items-start justify-between flex-wrap gap-3">
       <div>
-        <h2 className="text-slate-900">Analyse IA</h2>
+        <h2 className="text-slate-900">{t('analysis.title')}</h2>
         <p className="text-xs text-slate-400 mt-0.5">{dateLabel}</p>
       </div>
       <div className="flex items-center gap-2 flex-wrap no-print">
-        {data.cached && <span className="badge badge-info">Mise en cache</span>}
+        {data.cached && <span className="badge badge-info">{t('analysis.cached')}</span>}
         {data.provider && <span className="badge badge-success">{data.provider}</span>}
         <button
           onClick={() => setShowRelaunchSelector((v) => !v)}
           className="btn-secondary text-xs px-3 py-1.5"
         >
-          {showRelaunchSelector ? 'Annuler' : 'Relancer'}
+          {showRelaunchSelector ? t('common.cancel') : t('analysis.relaunch')}
         </button>
         <button onClick={handlePrint} className="btn-secondary text-xs px-3 py-1.5">
-          Exporter PDF
+          {t('analysis.exportPdf')}
         </button>
       </div>
     </div>
@@ -613,8 +617,8 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
 
   const relaunchSelector = showRelaunchSelector ? (
     <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 no-print">
-      <p className="text-xs text-slate-500 mb-2">Sélectionnez un provider pour relancer l'analyse</p>
-      {renderProviderSelector("Relancer l'analyse")}
+      <p className="text-xs text-slate-500 mb-2">{t('analysis.relaunchTitle')}</p>
+      {renderProviderSelector(t('analysis.relaunching'))}
     </div>
   ) : null
 
@@ -659,7 +663,7 @@ export function AIAnalysis({ simulationId, simulationName, preloaded, onAnalyzed
             {kind === 'scenarios' ? (
               <ScenariosGrid content={section.content} />
             ) : kind === 'recommendations' ? (
-              <div>{renderRecommendations(section.content)}</div>
+              <div>{renderRecommendations(section.content, t)}</div>
             ) : (
               <div>{renderContent(section.content)}</div>
             )}

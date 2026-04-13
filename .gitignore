@@ -43,5 +43,7 @@ api/prisma/*.db-journal
 # Dossiers
 Capture/
 documents/*.md
-DECISIONS.md
 PORTS.md
+
+# Providers IA (clés API)
+api/providers.json

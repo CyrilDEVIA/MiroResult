@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import Swal from 'sweetalert2'
 import api from '@/services/api'
@@ -73,6 +74,7 @@ function EyeIcon({ open }: { open: boolean }) {
 type Mode = 'list' | 'create' | 'edit'
 
 export default function SettingsPage() {
+  const { t } = useTranslation()
   const [providers, setProviders] = useState<ProviderDisplay[]>([])
   const [active, setActive] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -91,7 +93,7 @@ export default function SettingsPage() {
         setProviders(data.providers)
         setActive(data.active)
       })
-      .catch(() => toast.error('Impossible de charger les providers'))
+      .catch(() => toast.error(t('settings.loadError')))
       .finally(() => setLoading(false))
   }, [])
 
@@ -139,11 +141,11 @@ export default function SettingsPage() {
 
   async function handleSubmit() {
     if (!form.name || !form.baseUrl || !form.model) {
-      toast.error('Nom, URL et modèle sont obligatoires')
+      toast.error(t('settings.requiredFields'))
       return
     }
     if (mode === 'create' && !form.apiKey) {
-      toast.error('La clé API est obligatoire à la création')
+      toast.error(t('settings.requiredApiKey'))
       return
     }
 
@@ -158,16 +160,16 @@ export default function SettingsPage() {
 
       if (mode === 'create') {
         await api.post('/api/settings/providers', payload)
-        toast.success('Provider ajouté')
+        toast.success(t('settings.addSuccess'))
       } else {
         await api.patch(`/api/settings/providers/${editingId}`, payload)
-        toast.success('Provider mis à jour')
+        toast.success(t('settings.updateSuccess'))
       }
 
       cancelForm()
       loadProviders()
     } catch {
-      toast.error(mode === 'create' ? 'Échec de l\'ajout du provider' : 'Échec de la mise à jour')
+      toast.error(mode === 'create' ? t('settings.addError') : t('settings.updateError'))
     } finally {
       setSaving(false)
     }
@@ -177,12 +179,12 @@ export default function SettingsPage() {
 
   async function handleDelete(p: ProviderDisplay) {
     const result = await Swal.fire({
-      title: 'Supprimer ce provider ?',
-      html: `<span style="font-family:monospace">${p.name}</span> sera supprimé définitivement.`,
+      title: t('settings.deleteConfirmTitle'),
+      text: t('settings.deleteConfirmText', { name: p.name }),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Supprimer',
-      cancelButtonText: 'Annuler',
+      confirmButtonText: t('common.delete'),
+      cancelButtonText: t('common.cancel'),
       confirmButtonColor: '#dc2626',
       focusCancel: true,
     })
@@ -191,11 +193,11 @@ export default function SettingsPage() {
 
     try {
       await api.delete(`/api/settings/providers/${p.id}`)
-      toast.success('Provider supprimé')
+      toast.success(t('settings.deleteSuccess'))
       if (active === p.id) setActive(null)
       loadProviders()
     } catch {
-      toast.error('Échec de la suppression')
+      toast.error(t('settings.deleteError'))
     }
   }
 
@@ -205,37 +207,37 @@ export default function SettingsPage() {
     const isCreate = mode === 'create'
     return (
       <div className="card space-y-5">
-        <h3>{isCreate ? 'Ajouter un provider' : 'Modifier le provider'}</h3>
+        <h3>{isCreate ? t('settings.addProvider') : t('settings.editTitle')}</h3>
 
         <div className="space-y-1">
           <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-            Nom du provider <span className="text-red-500">*</span>
+            {t('settings.labelName')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="ex: OpenRouter"
+            placeholder={t('settings.placeholderName')}
             className={inputClass}
           />
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-            URL de base <span className="text-red-500">*</span>
+            {t('settings.labelUrl')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={form.baseUrl}
             onChange={(e) => setForm((f) => ({ ...f, baseUrl: e.target.value }))}
-            placeholder="ex: https://openrouter.ai/api/v1"
+            placeholder={t('settings.placeholderUrl')}
             className={inputClass}
           />
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-            Clé API {isCreate && <span className="text-red-500">*</span>}
+            {t('settings.labelApiKey')} {isCreate && <span className="text-red-500">*</span>}
           </label>
           <div className="relative">
             <input
@@ -244,7 +246,7 @@ export default function SettingsPage() {
               onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))}
               onFocus={handleKeyFocus}
               onBlur={handleKeyBlur}
-              placeholder={isCreate ? 'sk-...' : '(inchangée si vide)'}
+              placeholder={isCreate ? t('settings.placeholderApiKey') : t('settings.placeholderApiKeyEdit')}
               autoComplete="new-password"
               className={`${inputClass} pr-10`}
             />
@@ -261,23 +263,23 @@ export default function SettingsPage() {
 
         <div className="space-y-1">
           <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-            Modèle <span className="text-red-500">*</span>
+            {t('settings.labelModel')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={form.model}
             onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))}
-            placeholder="ex: anthropic/claude-3.5-sonnet"
+            placeholder={t('settings.placeholderModel')}
             className={inputClass}
           />
         </div>
 
         <div className="flex gap-3">
           <button onClick={handleSubmit} disabled={saving} className={`btn-accent ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}>
-            {saving ? 'Enregistrement...' : isCreate ? 'Ajouter' : 'Enregistrer'}
+            {saving ? t('settings.saving') : isCreate ? t('settings.addBtn') : t('common.save')}
           </button>
           <button onClick={cancelForm} disabled={saving} className="btn-secondary">
-            Annuler
+            {t('common.cancel')}
           </button>
         </div>
       </div>
@@ -288,14 +290,14 @@ export default function SettingsPage() {
 
   function renderList() {
     if (loading) {
-      return <p className="text-sm text-slate-400">Chargement...</p>
+      return <p className="text-sm text-slate-400">{t('common.loading')}</p>
     }
 
     if (providers.length === 0) {
       return (
         <div className="card text-center py-10">
-          <p className="text-sm text-slate-400">Aucun provider configuré.</p>
-          <p className="text-xs text-slate-300 mt-1">Ajoutez un provider OpenAI-compatible pour activer l'analyse IA.</p>
+          <p className="text-sm text-slate-400">{t('settings.noProviders')}</p>
+          <p className="text-xs text-slate-300 mt-1">{t('settings.noProvidersHint')}</p>
         </div>
       )
     }
@@ -310,10 +312,10 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-slate-800 text-sm">{p.name}</span>
                   {isActive && (
-                    <span className="badge badge-success text-xs">Actif</span>
+                    <span className="badge badge-success text-xs">{t('settings.active')}</span>
                   )}
                   {!p.hasKey && (
-                    <span className="badge badge-warning text-xs">Clé manquante</span>
+                    <span className="badge badge-warning text-xs">{t('settings.keyMissing')}</span>
                   )}
                 </div>
                 <p className="text-xs font-mono text-slate-500 truncate">{p.baseUrl}</p>
@@ -324,14 +326,14 @@ export default function SettingsPage() {
                 <button
                   onClick={() => openEdit(p)}
                   className="btn-secondary text-xs px-2 py-1.5"
-                  title="Modifier"
+                  title={t('settings.edit')}
                 >
                   <PencilIcon />
                 </button>
                 <button
                   onClick={() => handleDelete(p)}
                   className="btn-secondary text-xs px-2 py-1.5 text-red-500 hover:text-red-700"
-                  title="Supprimer"
+                  title={t('common.delete')}
                 >
                   <TrashIcon />
                 </button>
@@ -346,21 +348,21 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1>Paramètres</h1>
-        <p className="text-sm text-slate-500 mt-1">Configuration de l'application</p>
+        <h1>{t('settings.title')}</h1>
+        <p className="text-sm text-slate-500 mt-1">{t('settings.subtitle')}</p>
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-medium text-slate-800">Providers IA</h3>
+            <h3 className="text-base font-medium text-slate-800">{t('settings.providers')}</h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Endpoints OpenAI-compatibles — le provider se choisit au moment de chaque analyse
+              {t('settings.providersSubtitle')}
             </p>
           </div>
           {mode === 'list' && (
             <button onClick={openCreate} className="btn-accent text-sm px-4 py-2">
-              + Ajouter
+              {t('settings.addBtnShort')}
             </button>
           )}
         </div>

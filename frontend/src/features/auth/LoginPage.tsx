@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import api from '@/services/api'
 
@@ -12,6 +13,7 @@ interface LoginResponse {
 }
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -29,7 +31,7 @@ export default function LoginPage() {
       login(data.data.user, data.data.token)
       navigate('/')
     } catch {
-      setError('Email ou mot de passe incorrect')
+      setError(t('auth.invalidCredentials'))
     } finally {
       setLoading(false)
     }
@@ -46,7 +48,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
             <label htmlFor="email" className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
-              Email
+              {t('auth.email')}
             </label>
             <input
               id="email"
@@ -61,7 +63,7 @@ export default function LoginPage() {
 
           <div className="space-y-1.5">
             <label htmlFor="password" className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
-              Mot de passe
+              {t('auth.password')}
             </label>
             <input
               id="password"
@@ -85,7 +87,7 @@ export default function LoginPage() {
             disabled={loading}
             className="btn-accent w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? t('auth.loggingIn') : t('auth.login')}
           </button>
         </form>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import api from '@/services/api'
 import { SimulationList } from '@/features/simulations/SimulationList'
@@ -36,14 +37,8 @@ interface SimulationItem {
 
 type Status = 'idle' | 'uploading' | 'generating' | 'error'
 
-const STATUS_LABEL: Record<Status, string> = {
-  idle: 'Générer le rapport',
-  uploading: 'Import du fichier…',
-  generating: 'Génération en cours…',
-  error: 'Réessayer',
-}
-
 export default function SimulationsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -70,18 +65,18 @@ export default function SimulationsPage() {
           setSelectedProviderId(data.providers[0].id)
         }
       })
-      .catch((err) => toast.error(err?.message ?? 'Une erreur est survenue'))
-  }, [])
+      .catch((err) => toast.error(err?.message ?? t('common.error')))
+  }, [t])
 
   useEffect(() => {
     api.get<{ success: boolean; data: SimulationItem[] }>('/api/simulations')
       .then(({ data }) => setSimulations(data.data))
-      .catch((err) => toast.error(err?.message ?? 'Une erreur est survenue'))
-  }, [])
+      .catch((err) => toast.error(err?.message ?? t('common.error')))
+  }, [t])
 
   function acceptFile(f: File) {
     if (!f.name.endsWith('.zip')) {
-      toast.error('Format invalide — déposez un fichier .zip MiroFish')
+      toast.error(t('simulations.dropzoneBadFormat'))
       return
     }
     setFile(f)
@@ -105,7 +100,7 @@ export default function SimulationsPage() {
   async function handleGenerate() {
     if (!file || status === 'uploading' || status === 'generating') return
     if (!selectedProviderId) {
-      toast.error('Sélectionnez un provider IA')
+      toast.error(t('simulations.selectProvider'))
       return
     }
 
@@ -122,7 +117,7 @@ export default function SimulationsPage() {
       simulationId = uploadData.data.simulation.id
     } catch {
       setStatus('error')
-      setErrorMsg("Erreur lors de l'import du fichier ZIP. Vérifiez que le fichier est valide.")
+      setErrorMsg(t('simulations.errorUpload'))
       return
     }
 
@@ -137,7 +132,7 @@ export default function SimulationsPage() {
       })
     } catch {
       setStatus('error')
-      setErrorMsg('Erreur lors de la génération du rapport HTML. Vérifiez votre provider IA.')
+      setErrorMsg(t('simulations.errorGenerate'))
     }
   }
 
@@ -147,7 +142,7 @@ export default function SimulationsPage() {
 
   async function handleGenerateHtmlFromList(simulationId: string) {
     if (!selectedProviderId) {
-      toast.error('Sélectionnez un provider IA dans le formulaire ci-dessus')
+      toast.error(t('simulations.noProviderSelected'))
       return
     }
     setGeneratingHtmlId(simulationId)
@@ -160,7 +155,7 @@ export default function SimulationsPage() {
         state: { html: data.html, filename: sim?.filename ?? simulationId, showHtml: true },
       })
     } catch {
-      toast.error('Erreur lors de la génération du rapport HTML. Vérifiez votre provider IA.')
+      toast.error(t('simulations.errorGenerate'))
     } finally {
       setGeneratingHtmlId(null)
     }
@@ -176,9 +171,9 @@ export default function SimulationsPage() {
       <div className="max-w-2xl mx-auto mb-10">
 
         <div className="mb-8">
-          <h1>Générer un rapport MiroFish</h1>
+          <h1>{t('simulations.title')}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Déposez un ZIP de simulation et obtenez un rapport HTML autonome prêt à télécharger.
+            {t('simulations.subtitle')}
           </p>
         </div>
 
@@ -221,7 +216,7 @@ export default function SimulationsPage() {
                 <div>
                   <p className="text-sm font-medium text-blue-800">{file.name}</p>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    {(file.size / 1024 / 1024).toFixed(2)} Mo — cliquez pour changer
+                    {t('simulations.fileSize', { size: (file.size / 1024 / 1024).toFixed(2) })}
                   </p>
                 </div>
               </>
@@ -233,8 +228,8 @@ export default function SimulationsPage() {
                   <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
                 </svg>
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Déposez votre ZIP MiroFish ici</p>
-                  <p className="text-xs text-slate-400 mt-0.5">ou cliquez pour sélectionner — .zip uniquement, max 100 Mo</p>
+                  <p className="text-sm font-medium text-slate-600">{t('simulations.dropzone')}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{t('simulations.dropzoneHint')}</p>
                 </div>
               </>
             )}
@@ -243,11 +238,11 @@ export default function SimulationsPage() {
 
         {/* 2. Sélecteur de provider */}
         <div className="card mb-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Provider IA</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">{t('simulations.providerLabel')}</p>
           {providers.length === 0 ? (
             <p className="text-sm text-slate-500">
-              Aucun provider configuré —{' '}
-              <Link to="/settings" className="text-blue-700 hover:underline">Paramètres</Link>
+              {t('simulations.noProvider')}{' '}
+              <Link to="/settings" className="text-blue-700 hover:underline">{t('simulations.noProviderLink')}</Link>
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -275,20 +270,20 @@ export default function SimulationsPage() {
 
         {/* 3. Format de sortie */}
         <div className="card mb-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Format de sortie</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">{t('simulations.outputFormat')}</p>
           <span className="badge badge-info">HTML</span>
         </div>
 
         {/* 4. Zone prompt libre */}
         <div className="card mb-6">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
-            Consignes particulières
-            <span className="normal-case font-normal text-slate-400 tracking-normal ml-2">(optionnel)</span>
+            {t('simulations.instructionsLabel')}
+            <span className="normal-case font-normal text-slate-400 tracking-normal ml-2">{t('common.optional')}</span>
           </p>
           <textarea
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
-            placeholder="Ex : mets en avant les métriques de diversité, inclus une section risques…"
+            placeholder={t('simulations.instructionsPlaceholder')}
             rows={4}
             maxLength={2000}
             className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2.5 resize-none focus:outline-none focus:border-blue-300 placeholder:text-slate-400"
@@ -307,8 +302,8 @@ export default function SimulationsPage() {
         {/* 5. Bouton Générer */}
         <div className="flex items-center justify-between">
           <p className="text-xs text-slate-400">
-            {status === 'uploading' && 'Import du fichier ZIP en cours…'}
-            {status === 'generating' && `Appel au modèle ${activeProvider?.model ?? 'IA'}, patientez…`}
+            {status === 'uploading' && t('simulations.uploadingDetail')}
+            {status === 'generating' && t('simulations.generatingDetail', { model: activeProvider?.model ?? 'IA' })}
           </p>
           <button
             type="button"
@@ -321,7 +316,12 @@ export default function SimulationsPage() {
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
               </svg>
             )}
-            {STATUS_LABEL[status]}
+            {({
+              idle: t('simulations.generateBtn'),
+              uploading: t('simulations.uploading'),
+              generating: t('simulations.generating'),
+              error: t('simulations.errorRetry'),
+            } as Record<Status, string>)[status]}
           </button>
         </div>
 
@@ -331,8 +331,8 @@ export default function SimulationsPage() {
       {simulations.length > 0 && (
         <div>
           <div className="mb-4">
-            <h2 className="text-slate-900">Simulations</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Historique de toutes vos simulations importées</p>
+            <h2 className="text-slate-900">{t('simulations.listTitle')}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{t('simulations.listSubtitle')}</p>
           </div>
           <SimulationList
             simulations={simulations}

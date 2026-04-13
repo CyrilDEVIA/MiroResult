@@ -1,10 +1,10 @@
+import path from 'path'
+import { access, writeFile } from 'fs/promises'
 import dotenv from 'dotenv'
+
 dotenv.config({
   path: path.resolve(__dirname, process.env.NODE_ENV === 'production' ? '../.env' : '../.env.local'),
 })
-
-import path from 'path'
-import { access, writeFile } from 'fs/promises'
 import app from './app'
 
 const PORT = process.env.PORT ?? 9904

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import Swal from 'sweetalert2'
 import api from '@/services/api'
@@ -26,12 +27,6 @@ const STATUS_BADGE: Record<Simulation['status'], string> = {
   pending: 'badge badge-warning',
   processed: 'badge badge-success',
   error: 'badge badge-danger',
-}
-
-const STATUS_LABEL: Record<Simulation['status'], string> = {
-  pending: 'En attente',
-  processed: 'Traité',
-  error: 'Erreur',
 }
 
 function TrashIcon() {
@@ -77,14 +72,16 @@ function SpinnerIcon() {
 }
 
 export function SimulationList({ simulations, onDelete, onGenerateHtml, generatingId }: Props) {
+  const { t } = useTranslation()
+
   async function handleDelete(sim: Simulation) {
     const result = await Swal.fire({
-      title: 'Supprimer cette simulation ?',
-      text: 'Cette action est irréversible. Le rapport et l\'analyse IA associés seront supprimés.',
+      title: t('simulations.deleteConfirmTitle'),
+      text: t('simulations.deleteConfirmText'),
       icon: 'warning',
       showCancelButton: true,
-      cancelButtonText: 'Annuler',
-      confirmButtonText: 'Supprimer',
+      cancelButtonText: t('simulations.deleteCancel'),
+      confirmButtonText: t('simulations.deleteConfirm'),
       confirmButtonColor: '#dc2626',
       focusCancel: true,
     })
@@ -93,10 +90,10 @@ export function SimulationList({ simulations, onDelete, onGenerateHtml, generati
 
     try {
       await api.delete(`/api/simulations/${sim.id}`)
-      toast.success('Simulation supprimée')
+      toast.success(t('simulations.deleteSuccess'))
       onDelete(sim.id)
     } catch {
-      toast.error('Erreur lors de la suppression')
+      toast.error(t('simulations.deleteError'))
     }
   }
 
@@ -105,12 +102,12 @@ export function SimulationList({ simulations, onDelete, onGenerateHtml, generati
       <table className="w-full">
         <thead>
           <tr className="border-b border-slate-100">
-            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">Fichier</th>
-            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">Statut</th>
-            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">Date</th>
-            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">Rapport</th>
-            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">Rapport HTML</th>
-            <th className="px-5 py-3 text-right text-xs text-slate-500 uppercase tracking-wide font-medium">Action</th>
+            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">{t('common.file')}</th>
+            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">{t('common.status')}</th>
+            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">{t('common.date')}</th>
+            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">{t('simulations.thReport')}</th>
+            <th className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">{t('simulations.thHtmlReport')}</th>
+            <th className="px-5 py-3 text-right text-xs text-slate-500 uppercase tracking-wide font-medium">{t('simulations.thAction')}</th>
           </tr>
         </thead>
         <tbody>
@@ -122,7 +119,7 @@ export function SimulationList({ simulations, onDelete, onGenerateHtml, generati
               <tr key={sim.id} className="border-t border-slate-100">
                 <td className="px-5 py-3 font-mono text-sm text-slate-800">{sim.filename}</td>
                 <td className="px-5 py-3">
-                  <span className={STATUS_BADGE[sim.status]}>{STATUS_LABEL[sim.status]}</span>
+                  <span className={STATUS_BADGE[sim.status]}>{t(`status.${sim.status}`)}</span>
                 </td>
                 <td className="px-5 py-3 text-xs text-slate-400">
                   {new Date(sim.createdAt).toLocaleDateString('fr-FR')}
@@ -133,7 +130,7 @@ export function SimulationList({ simulations, onDelete, onGenerateHtml, generati
                       to={`/simulations/${sim.id}/report`}
                       className="text-sm text-blue-700 hover:underline"
                     >
-                      {sim.report ? 'Voir le rapport' : 'Générer le rapport'}
+                      {sim.report ? t('simulations.viewReport') : t('simulations.generateReport')}
                     </Link>
                   ) : (
                     <span className="text-slate-400 text-xs">—</span>
@@ -149,10 +146,10 @@ export function SimulationList({ simulations, onDelete, onGenerateHtml, generati
                       {isGenerating ? (
                         <>
                           <SpinnerIcon />
-                          Génération…
+                          {t('simulations.generatingShort')}
                         </>
                       ) : (
-                        'Rapport HTML'
+                        t('simulations.htmlReportBtn')
                       )}
                     </button>
                   ) : (
@@ -163,7 +160,7 @@ export function SimulationList({ simulations, onDelete, onGenerateHtml, generati
                   <button
                     onClick={() => handleDelete(sim)}
                     className="text-slate-400 hover:text-red-600 transition-colors"
-                    title="Supprimer cette simulation"
+                    title={t('simulations.deleteTitle')}
                   >
                     <TrashIcon />
                   </button>

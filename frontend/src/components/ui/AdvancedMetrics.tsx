@@ -10,6 +10,7 @@ import {
   PieChart,
   Pie,
 } from 'recharts'
+import { useTranslation } from 'react-i18next'
 import { scoreColor, scoreBadge, semanticFill } from '@/utils/score'
 
 // ─── Types internes ───────────────────────────────────────────────────────────
@@ -36,29 +37,28 @@ interface MetricConfig {
   description: string
 }
 
-const METRICS: MetricConfig[] = [
-  {
-    key: 'agentDiversity',
-    shortLabel: 'Diversité',
-    fullLabel: 'Diversité des agents',
-    description:
-      'Ratio de profils distincts / total agents. 100 = tous uniques, 0 = tous identiques.',
-  },
-  {
-    key: 'convergenceScore',
-    shortLabel: 'Convergence',
-    fullLabel: 'Convergence',
-    description:
-      'Tendance vers un consensus au fil du temps. 100 = consensus total, 0 = divergence.',
-  },
-  {
-    key: 'temporalStability',
-    shortLabel: 'Stabilité',
-    fullLabel: 'Stabilité temporelle',
-    description:
-      'Variance step-by-step. 100 = dynamique stable, 0 = forte instabilité.',
-  },
-]
+function buildMetrics(t: (k: string) => string): MetricConfig[] {
+  return [
+    {
+      key: 'agentDiversity',
+      shortLabel: t('score.diversityShort'),
+      fullLabel: t('score.diversity'),
+      description: t('score.diversityDesc'),
+    },
+    {
+      key: 'convergenceScore',
+      shortLabel: t('score.convergence'),
+      fullLabel: t('score.convergence'),
+      description: t('score.convergenceDesc'),
+    },
+    {
+      key: 'temporalStability',
+      shortLabel: t('score.stabilityShort'),
+      fullLabel: t('score.stability'),
+      description: t('score.stabilityDesc'),
+    },
+  ]
+}
 
 // ─── MetricChart — BarChart recharts (exporté) ────────────────────────────────
 
@@ -125,7 +125,7 @@ export function MetricChart({ data, height = 170 }: MetricChartProps) {
           animationDuration={600}
         >
           {data.map((entry) => (
-            <Cell key={entry.name} fill={entry.fill} />
+            <Cell key={entry.shortLabel} fill={entry.fill} />
           ))}
         </Bar>
       </BarChart>
@@ -140,8 +140,10 @@ interface Props {
 }
 
 export function AdvancedMetrics({ metrics }: Props) {
+  const { t } = useTranslation()
   if (!metrics) return null
 
+  const METRICS = buildMetrics(t)
   const visibleMetrics = METRICS.filter((m) => metrics[m.key] !== null)
   const hasAnyMetric = visibleMetrics.length > 0 || metrics.globalScoreV2 !== null
 
@@ -163,18 +165,18 @@ export function AdvancedMetrics({ metrics }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h3>Métriques avancées v2</h3>
+          <h3>{t('score.v2Title')}</h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            Indicateurs comportementaux calculés sur les données de simulation
+            {t('score.v2Subtitle')}
           </p>
         </div>
         {metrics.globalScoreV2 !== null && (
           <div
             className="flex flex-col items-end gap-1"
-            title="Score composite : convergence×0.35 + stabilité×0.30 + diversité×0.20 + score v1×0.15"
+            title={t('score.v2Formula')}
           >
             <span className="text-xs text-slate-400 uppercase tracking-wide">
-              Score composite v2
+              {t('score.v2')}
             </span>
             <span
               className={`text-5xl font-black leading-none ${scoreColor(metrics.globalScoreV2)}`}
@@ -184,10 +186,10 @@ export function AdvancedMetrics({ metrics }: Props) {
             </span>
             <span className={scoreBadge(metrics.globalScoreV2)}>
               {metrics.globalScoreV2 >= 70
-                ? 'Bon'
+                ? t('score.good')
                 : metrics.globalScoreV2 >= 40
-                  ? 'Moyen'
-                  : 'Insuffisant'}
+                  ? t('score.average')
+                  : t('score.insufficient')}
             </span>
           </div>
         )}
@@ -217,7 +219,7 @@ export function AdvancedMetrics({ metrics }: Props) {
 
       {visibleMetrics.length === 0 && metrics.globalScoreV2 !== null && (
         <p className="text-xs text-slate-400 pt-2 border-t border-slate-100">
-          Métriques détaillées non disponibles — données actions/profils absentes du ZIP.
+          {t('score.v2NoDetail')}
         </p>
       )}
     </div>
@@ -247,16 +249,18 @@ export interface CompositionData {
 const GENRE_COLORS = ['#3B82F6', '#EC4899']
 
 export function CompositionCharts({ composition }: { composition: CompositionData }) {
+  const { t } = useTranslation()
+
   const genreData = [
-    { name: 'Hommes', value: composition.hommes_pct },
-    { name: 'Femmes', value: composition.femmes_pct },
+    { name: t('analysis.men'), value: composition.hommes_pct },
+    { name: t('analysis.women'), value: composition.femmes_pct },
   ]
 
-  const ageData: ChartDatum[] = composition.tranches_age.map((t) => ({
-    shortLabel: t.label,
-    fullLabel: t.label,
-    value: t.pct,
-    description: `${t.pct}% de la population simulée`,
+  const ageData: ChartDatum[] = composition.tranches_age.map((age) => ({
+    shortLabel: age.label,
+    fullLabel: age.label,
+    value: age.pct,
+    description: t('analysis.populationPct', { pct: age.pct }),
     fill: '#6366F1',
   }))
 
@@ -264,14 +268,14 @@ export function CompositionCharts({ composition }: { composition: CompositionDat
     shortLabel: p.label.length > 12 ? p.label.slice(0, 12) + '…' : p.label,
     fullLabel: p.label,
     value: p.pct,
-    description: `${p.pct}% de la population simulée`,
+    description: t('analysis.populationPct', { pct: p.pct }),
     fill: '#0EA5E9',
   }))
 
   return (
     <div className="card space-y-6">
       <div>
-        <h3>Composition de la population</h3>
+        <h3>{t('analysis.compositionTitle')}</h3>
         {composition.territoire && (
           <p className="text-xs text-slate-400 mt-0.5 font-mono">{composition.territoire}</p>
         )}
@@ -280,7 +284,7 @@ export function CompositionCharts({ composition }: { composition: CompositionDat
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Donut H/F */}
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Genre</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{t('analysis.genre')}</p>
           <ResponsiveContainer width="100%" height={150}>
             <PieChart>
               <Pie
@@ -327,7 +331,7 @@ export function CompositionCharts({ composition }: { composition: CompositionDat
         {/* Bar chart tranches d'âge */}
         {ageData.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Tranches d'âge</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{t('analysis.tranchesAge')}</p>
             <MetricChart data={ageData} height={150} />
           </div>
         )}
@@ -335,7 +339,7 @@ export function CompositionCharts({ composition }: { composition: CompositionDat
         {/* Bar chart profils */}
         {profilData.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Profils</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{t('analysis.profils')}</p>
             <MetricChart data={profilData} height={150} />
           </div>
         )}
@@ -378,6 +382,7 @@ const IMPACT_BADGE: Record<TrajectoireItem['impact'], string> = {
 const FREIN_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#6366F1', '#8B5CF6']
 
 export function SimulationCharts({ segments, freins, trajectoires }: SimulationChartsProps) {
+  const { t } = useTranslation()
   const hasAny = segments.length > 0 || freins.length > 0 || trajectoires.length > 0
   if (!hasAny) return null
 
@@ -385,20 +390,20 @@ export function SimulationCharts({ segments, freins, trajectoires }: SimulationC
     shortLabel: s.nom.length > 12 ? s.nom.slice(0, 12) + '…' : s.nom,
     fullLabel: s.nom,
     value: s.score,
-    description: `Score de performance : ${s.score}/100`,
+    description: t('analysis.performanceScore', { score: s.score }),
     fill: semanticFill(s.score),
   }))
 
   return (
     <div className="card space-y-5">
-      <h3>Analyse des données</h3>
+      <h3>{t('analysis.dataTitle')}</h3>
 
       {(segments.length > 0 || freins.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Segments → BarChart */}
           {segments.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">Scores par segment</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wide">{t('analysis.segmentScores')}</p>
               <MetricChart data={segmentData} height={160} />
             </div>
           )}
@@ -406,7 +411,7 @@ export function SimulationCharts({ segments, freins, trajectoires }: SimulationC
           {/* Freins → PieChart donut */}
           {freins.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">Freins identifiés</p>
+              <p className="text-xs text-slate-500 uppercase tracking-wide">{t('analysis.freins')}</p>
               <ResponsiveContainer width="100%" height={160}>
                 <PieChart>
                   <Pie
@@ -459,12 +464,12 @@ export function SimulationCharts({ segments, freins, trajectoires }: SimulationC
       {/* Trajectoires → tableau */}
       {trajectoires.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Trajectoires prédictives</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide">{t('analysis.trajectoires')}</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-900">
-                  {['Scénario', 'Probabilité', 'Condition', 'Impact'].map((h) => (
+                  {[t('analysis.scenario'), t('analysis.probabilite'), t('analysis.condition'), t('analysis.impact')].map((h) => (
                     <th
                       key={h}
                       className="px-3 py-2.5 text-left text-xs font-semibold text-white uppercase tracking-widest"

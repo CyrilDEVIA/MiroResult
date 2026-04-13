@@ -16,7 +16,12 @@ export function progressColor(score: number): string {
   return 'bg-red-500'
 }
 
-export function scoreLabel(score: number): string {
+export function scoreLabel(score: number, t?: (key: string) => string): string {
+  if (t) {
+    if (score >= 70) return t('score.good')
+    if (score >= 40) return t('score.average')
+    return t('score.insufficient')
+  }
   if (score >= 70) return 'Bon'
   if (score >= 40) return 'Moyen'
   return 'Insuffisant'

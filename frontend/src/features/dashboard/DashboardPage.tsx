@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   BarChart,
   Bar,
@@ -60,12 +61,6 @@ const STATUS_BADGE: Record<RecentSimulation['status'], string> = {
   error: 'badge badge-danger',
 }
 
-const STATUS_LABEL: Record<RecentSimulation['status'], string> = {
-  pending: 'En attente',
-  processed: 'Traité',
-  error: 'Erreur',
-}
-
 function parseScoreV2(scoresV2: string | null): number | null {
   if (!scoresV2) return null
   try {
@@ -83,6 +78,7 @@ function truncateName(name: string, max = 14): string {
 // ─── DashboardPage ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { t } = useTranslation()
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState('')
 
@@ -90,14 +86,14 @@ export default function DashboardPage() {
     api
       .get<{ success: boolean; data: Stats }>('/api/stats')
       .then(({ data }) => setStats(data.data))
-      .catch(() => setError('Impossible de charger les statistiques.'))
-  }, [])
+      .catch(() => setError(t('dashboard.loadError')))
+  }, [t])
 
   return (
     <div>
       <div className="mb-6">
-        <h1>Tableau de bord</h1>
-        <p className="text-sm text-slate-500 mt-1">Vue d'ensemble de vos simulations MiroFish</p>
+        <h1>{t('dashboard.title')}</h1>
+        <p className="text-sm text-slate-500 mt-1">{t('dashboard.subtitle')}</p>
       </div>
 
       {error && (
@@ -111,36 +107,36 @@ export default function DashboardPage() {
           {/* ── KPI cards ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <KpiCard
-              label="Simulations"
+              label={t('dashboard.totalSimulations')}
               value={stats.totalSimulations}
               subtitle={
                 stats.totalSimulations > 0
-                  ? `${stats.processedSimulations} traitée${stats.processedSimulations > 1 ? 's' : ''}`
-                  : 'Aucune simulation'
+                  ? t('dashboard.processedCount', { count: stats.processedSimulations })
+                  : t('dashboard.noSimulations')
               }
             />
 
             <KpiCard
-              label="Analyses IA"
+              label={t('dashboard.aiAnalyses')}
               value={stats.totalAnalyses}
-              subtitle={stats.totalAnalyses > 0 ? 'analyses générées' : 'Aucune analyse'}
+              subtitle={stats.totalAnalyses > 0 ? t('dashboard.analysesGenerated') : t('dashboard.noAnalysis')}
             />
 
             <KpiCard
-              label="Provider actif"
+              label={t('dashboard.activeProvider')}
               value={stats.activeProvider ? stats.activeProvider.name : '—'}
               subtitle={
                 stats.activeProvider
                   ? stats.activeProvider.model
-                  : 'Aucun provider configuré'
+                  : t('dashboard.noProvider')
               }
               colorClass={stats.activeProvider ? 'text-slate-900' : 'text-slate-400'}
             />
 
             <KpiCard
-              label="Score v2 moyen"
+              label={t('dashboard.avgScoreV2')}
               value={stats.avgScoreV2 !== null ? stats.avgScoreV2 : '—'}
-              subtitle={stats.avgScoreV2 !== null ? '/ 100' : 'Aucune donnée'}
+              subtitle={stats.avgScoreV2 !== null ? '/ 100' : t('common.noData')}
               colorClass={
                 stats.avgScoreV2 !== null ? scoreColor(stats.avgScoreV2) : 'text-slate-400'
               }
@@ -164,8 +160,8 @@ export default function DashboardPage() {
             return (
               <div className="card mb-6 space-y-3">
                 <div>
-                  <h3>Scores récents</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Score v1 des dernières simulations traitées</p>
+                  <h3>{t('dashboard.recentScores')}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">{t('dashboard.recentScoresSubtitle')}</p>
                 </div>
                 <ResponsiveContainer width="100%" height={130}>
                   <BarChart
@@ -235,26 +231,33 @@ export default function DashboardPage() {
           {/* ── Simulations récentes ───────────────────────────────────────── */}
           <div className="card p-0 overflow-hidden mb-6">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-              <h3>Simulations récentes</h3>
+              <h3>{t('dashboard.recentSimulations')}</h3>
               <Link to="/simulations" className="text-sm text-blue-700 hover:text-blue-900">
-                Voir tout →
+                {t('dashboard.viewAll')}
               </Link>
             </div>
 
             {stats.recentSimulations.length === 0 ? (
               <p className="px-5 py-8 text-sm text-slate-500">
-                Aucune simulation —{' '}
+                {t('dashboard.noSimulations')} —{' '}
                 <Link to="/simulations" className="text-blue-700 hover:underline">
-                  importer un fichier MiroFish
+                  {t('dashboard.importFile')}
                 </Link>
               </p>
             ) : (
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    {['Fichier', 'Statut', 'Score v1', 'Score v2', 'Date', ''].map((th) => (
+                    {[
+                      t('common.file'),
+                      t('common.status'),
+                      t('dashboard.thScoreV1'),
+                      t('dashboard.thScoreV2'),
+                      t('common.date'),
+                      '',
+                    ].map((th, i) => (
                       <th
-                        key={th}
+                        key={i}
                         className="px-5 py-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium"
                       >
                         {th}
@@ -275,7 +278,7 @@ export default function DashboardPage() {
                         </td>
                         <td className="px-5 py-3">
                           <span className={STATUS_BADGE[sim.status]}>
-                            {STATUS_LABEL[sim.status]}
+                            {t(`status.${sim.status}`)}
                           </span>
                         </td>
                         <td className="px-5 py-3">
@@ -307,7 +310,7 @@ export default function DashboardPage() {
                               to={`/simulations/${sim.id}/report`}
                               className="text-sm text-blue-700 hover:text-blue-900 hover:underline"
                             >
-                              Rapport →
+                              {t('dashboard.reportLink')}
                             </Link>
                           )}
                         </td>
@@ -323,8 +326,8 @@ export default function DashboardPage() {
           <div className="card">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="mb-3">Statut système</h3>
-                <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Provider IA</p>
+                <h3 className="mb-3">{t('dashboard.systemStatus')}</h3>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">{t('dashboard.providerLabel')}</p>
                 {stats.activeProvider ? (
                   <div className="space-y-0.5">
                     <p className="text-sm font-medium text-slate-900">
@@ -335,18 +338,18 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    <p className="text-sm text-slate-400">Aucun provider configuré</p>
+                    <p className="text-sm text-slate-400">{t('dashboard.noProvider')}</p>
                     <Link to="/settings" className="text-xs text-blue-700 hover:underline">
-                      Configurer un provider IA →
+                      {t('dashboard.configureProvider')}
                     </Link>
                   </div>
                 )}
               </div>
               <div className="flex-shrink-0">
                 {stats.activeProvider ? (
-                  <span className="badge badge-success">Opérationnel</span>
+                  <span className="badge badge-success">{t('dashboard.operational')}</span>
                 ) : (
-                  <span className="badge badge-danger">Aucun provider actif</span>
+                  <span className="badge badge-danger">{t('dashboard.noActiveProvider')}</span>
                 )}
               </div>
             </div>

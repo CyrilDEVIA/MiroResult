@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PieChart, Pie, Cell } from 'recharts'
 import { scoreColor, scoreLabel, semanticFill } from '@/utils/score'
 
@@ -127,11 +128,12 @@ interface ScoreGlobalProps {
 }
 
 export function ScoreGlobal({ score }: ScoreGlobalProps) {
+  const { t } = useTranslation()
   return (
     <div className="card flex flex-col items-center py-6 gap-3">
-      <p className="text-xs text-slate-500 uppercase tracking-wide">Score global</p>
+      <p className="text-xs text-slate-500 uppercase tracking-wide">{t('score.global')}</p>
       <ScoreGauge score={score} />
-      <p className="text-sm text-slate-400">/ 100 — {scoreLabel(score)}</p>
+      <p className="text-sm text-slate-400">/ 100 — {scoreLabel(score, t)}</p>
     </div>
   )
 }
@@ -146,23 +148,20 @@ export interface VerdictData {
   resume: string
 }
 
-const DECISION_CONFIG: Record<Decision, { label: string; borderClass: string; bgClass: string; textClass: string; pillClass: string }> = {
+const DECISION_CONFIG: Record<Decision, { borderClass: string; bgClass: string; textClass: string; pillClass: string }> = {
   lancer: {
-    label: 'LANCER',
     borderClass: 'border-emerald-500',
     bgClass: 'bg-emerald-50',
     textClass: 'text-emerald-700',
     pillClass: 'bg-emerald-600 text-white',
   },
   pivoter: {
-    label: 'PIVOTER',
     borderClass: 'border-amber-500',
     bgClass: 'bg-amber-50',
     textClass: 'text-amber-700',
     pillClass: 'bg-amber-500 text-white',
   },
   abandonner: {
-    label: 'ABANDONNER',
     borderClass: 'border-red-500',
     bgClass: 'bg-red-50',
     textClass: 'text-red-700',
@@ -170,17 +169,24 @@ const DECISION_CONFIG: Record<Decision, { label: string; borderClass: string; bg
   },
 }
 
+const DECISION_I18N_KEY: Record<Decision, string> = {
+  lancer: 'score.launch',
+  pivoter: 'score.pivot',
+  abandonner: 'score.abandon',
+}
+
 export function VerdictCard({ verdict }: { verdict: VerdictData }) {
+  const { t } = useTranslation()
   const cfg = DECISION_CONFIG[verdict.decision]
   return (
     <div className={`border-l-4 ${cfg.borderClass} ${cfg.bgClass} rounded-r-xl p-6 space-y-4`}>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Décision</p>
-          <p className={`text-5xl font-black leading-none ${cfg.textClass}`}>{cfg.label}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{t('score.decision')}</p>
+          <p className={`text-5xl font-black leading-none ${cfg.textClass}`}>{t(DECISION_I18N_KEY[verdict.decision])}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Viabilité</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{t('score.viability')}</p>
           <div className="flex items-baseline gap-1.5">
             <span className={`text-5xl font-black leading-none ${cfg.textClass}`}>{verdict.score_viabilite}</span>
             <span className="text-slate-400 text-sm">/100</span>

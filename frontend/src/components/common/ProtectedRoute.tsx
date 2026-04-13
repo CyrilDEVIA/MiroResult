@@ -1,8 +1,12 @@
 import { Navigate, NavLink, Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
+import { LangToggle } from '@/components/common/LangToggle'
 
 export function ProtectedRoute() {
   const { isAuthenticated, logout } = useAuth()
+  const { t } = useTranslation()
+
   if (!isAuthenticated) return <Navigate to="/login" replace />
 
   return (
@@ -10,7 +14,7 @@ export function ProtectedRoute() {
       {/* Sidebar */}
       <aside className="w-56 bg-slate-900 flex flex-col shrink-0 print:hidden px-3">
         <div className="flex justify-center">
-         <img src="/img/faviconT.png" alt="MiroResult" className="h-32" />
+          <img src="/img/faviconT.png" alt="MiroResult" className="h-32" />
         </div>
 
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
@@ -21,7 +25,7 @@ export function ProtectedRoute() {
               isActive ? 'sidebar-item-active' : 'sidebar-item'
             }
           >
-            Tableau de bord
+            {t('nav.dashboard')}
           </NavLink>
           <NavLink
             to="/simulations"
@@ -29,7 +33,7 @@ export function ProtectedRoute() {
               isActive ? 'sidebar-item-active' : 'sidebar-item'
             }
           >
-            Simulations
+            {t('nav.simulations')}
           </NavLink>
           <NavLink
             to="/settings"
@@ -37,16 +41,17 @@ export function ProtectedRoute() {
               isActive ? 'sidebar-item-active' : 'sidebar-item'
             }
           >
-            Paramètres
+            {t('nav.settings')}
           </NavLink>
         </nav>
 
-        <div className="px-3 py-4 border-t border-slate-800">
+        <div className="px-3 py-4 border-t border-slate-800 space-y-2">
+          <LangToggle />
           <button
             onClick={logout}
             className="sidebar-item w-full text-left"
           >
-            Déconnexion
+            {t('nav.logout')}
           </button>
         </div>
       </aside>

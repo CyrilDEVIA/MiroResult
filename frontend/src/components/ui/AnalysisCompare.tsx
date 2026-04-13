@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { AnalysisEntry } from './AnalysisHistory'
 
 interface Section {
@@ -43,6 +44,7 @@ function formatDate(iso: string): string {
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 export function AnalysisCompare({ entries, onClose }: Props) {
+  const { t } = useTranslation()
   const [a, b] = entries
 
   const sectionsA = parseSections(a.rawText)
@@ -74,13 +76,13 @@ export function AnalysisCompare({ entries, onClose }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-slate-900">Comparaison d'analyses</h2>
+          <h2 className="text-slate-900">{t('analysis.compareTitle')}</h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Les sections dont le contenu diffère sont surlignées en jaune
+            {t('analysis.compareSubtitle')}
           </p>
         </div>
         <button onClick={onClose} className="btn-secondary text-sm shrink-0">
-          Fermer la comparaison
+          {t('analysis.closeCompare')}
         </button>
       </div>
 
@@ -92,7 +94,7 @@ export function AnalysisCompare({ entries, onClose }: Props) {
             className={`card space-y-0.5 border-t-2 ${i === 0 ? 'border-t-blue-400' : 'border-t-slate-400'}`}
           >
             <p className="text-xs text-slate-400 uppercase tracking-wide">
-              {i === 0 ? 'Analyse A' : 'Analyse B'}
+              {i === 0 ? t('analysis.entryA') : t('analysis.entryB')}
             </p>
             <p className="text-sm font-medium text-slate-800">{entry.provider}</p>
             <p className="text-xs font-mono text-slate-400 truncate">{entry.model}</p>
@@ -121,7 +123,7 @@ export function AnalysisCompare({ entries, onClose }: Props) {
                 </p>
                 {differ && (
                   <span className="badge badge-warning text-xs normal-case tracking-normal">
-                    Différent
+                    {t('analysis.different')}
                   </span>
                 )}
               </div>
@@ -132,7 +134,7 @@ export function AnalysisCompare({ entries, onClose }: Props) {
                       {contentA.trim()}
                     </p>
                   ) : (
-                    <p className="text-xs text-slate-400 italic">Section absente</p>
+                    <p className="text-xs text-slate-400 italic">{t('analysis.sectionAbsent')}</p>
                   )}
                 </div>
                 <div className={cellClass}>
@@ -141,7 +143,7 @@ export function AnalysisCompare({ entries, onClose }: Props) {
                       {contentB.trim()}
                     </p>
                   ) : (
-                    <p className="text-xs text-slate-400 italic">Section absente</p>
+                    <p className="text-xs text-slate-400 italic">{t('analysis.sectionAbsent')}</p>
                   )}
                 </div>
               </div>
@@ -164,7 +166,7 @@ export function AnalysisCompare({ entries, onClose }: Props) {
       {/* Bouton fermer bas de page */}
       <div className="flex justify-end pt-2">
         <button onClick={onClose} className="btn-secondary text-sm">
-          Fermer la comparaison
+          {t('analysis.closeCompare')}
         </button>
       </div>
     </div>

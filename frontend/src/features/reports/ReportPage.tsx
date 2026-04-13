@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import Swal from 'sweetalert2'
 import { ScoreGlobal } from '@/components/ui/ScoreGlobal'
@@ -38,13 +39,8 @@ const PRIORITY_BADGE: Record<Recommendation['priority'], string> = {
   low: 'badge badge-info',
 }
 
-const PRIORITY_LABEL: Record<Recommendation['priority'], string> = {
-  high: 'Haute',
-  medium: 'Moyenne',
-  low: 'Faible',
-}
-
 export default function ReportPage() {
+  const { t } = useTranslation()
   const { id: simulationId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -87,17 +83,17 @@ export default function ReportPage() {
           )
           setReport(reportPayload.data)
         } else {
-          setError('La simulation n\'est pas encore traitée.')
+          setError(t('report.notProcessed'))
         }
       } catch {
-        setError('Impossible de charger le rapport — vérifiez que la simulation est valide.')
+        setError(t('report.loadError'))
       } finally {
         setLoading(false)
       }
     }
 
     loadReport()
-  }, [simulationId])
+  }, [simulationId, t])
 
   // Scroll automatique vers le bloc HTML si showHtml
   useEffect(() => {
@@ -122,7 +118,7 @@ export default function ReportPage() {
       .then(({ data }) => {
         if (data.html) setHtmlContent(data.html)
       })
-      .catch((err) => toast.error(err?.message ?? 'Une erreur est survenue'))
+      .catch((err) => toast.error(err?.message ?? t('common.error')))
       .finally(() => setHtmlLoading(false))
   }, [simulationId]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -137,17 +133,17 @@ export default function ReportPage() {
           setHtmlSelectedProviderId(data.providers[0].id)
         }
       })
-      .catch((err) => toast.error(err?.message ?? 'Une erreur est survenue'))
+      .catch((err) => toast.error(err?.message ?? t('common.error')))
   }, [])
 
   async function handleDelete() {
     const result = await Swal.fire({
-      title: 'Supprimer cette simulation ?',
-      text: 'Cette action est irréversible. Le rapport et l\'analyse IA associés seront supprimés.',
+      title: t('simulations.deleteConfirmTitle'),
+      text: t('simulations.deleteConfirmText'),
       icon: 'warning',
       showCancelButton: true,
-      cancelButtonText: 'Annuler',
-      confirmButtonText: 'Supprimer',
+      cancelButtonText: t('simulations.deleteCancel'),
+      confirmButtonText: t('simulations.deleteConfirm'),
       confirmButtonColor: '#dc2626',
       focusCancel: true,
     })
@@ -156,10 +152,10 @@ export default function ReportPage() {
 
     try {
       await api.delete(`/api/simulations/${simulationId}`)
-      toast.success('Simulation supprimée')
+      toast.success(t('simulations.deleteSuccess'))
       navigate('/simulations')
     } catch {
-      toast.error('Erreur lors de la suppression')
+      toast.error(t('simulations.deleteError'))
     }
   }
 
@@ -192,7 +188,7 @@ export default function ReportPage() {
   if (loading) {
     return (
       <div>
-        <p className="text-sm text-slate-500">Chargement du rapport...</p>
+        <p className="text-sm text-slate-500">{t('report.loading')}</p>
       </div>
     )
   }
@@ -201,10 +197,10 @@ export default function ReportPage() {
     return (
       <div>
         <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
-          {error || 'Rapport introuvable'}
+          {error || t('report.notFound')}
         </p>
         <Link to="/simulations" className="text-sm text-blue-700 hover:underline">
-          ← Retour aux simulations
+          {t('report.backLink')}
         </Link>
       </div>
     )
@@ -221,16 +217,16 @@ export default function ReportPage() {
       <div className="flex items-center justify-between mb-6 print:hidden">
         <div>
           <Link to="/simulations" className="text-sm text-slate-400 hover:text-slate-600">
-            ← Simulations
+            {t('report.backToSimulations')}
           </Link>
-          <h1 className="mt-1">Rapport de simulation</h1>
+          <h1 className="mt-1">{t('report.title')}</h1>
           <p className="text-xs text-slate-500 mt-0.5 font-mono">
             {report.simulation.filename} — {new Date(report.createdAt).toLocaleDateString('fr-FR')}
           </p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="btn-secondary">
-            Imprimer PDF
+            {t('common.print')}
           </button>
           {htmlContent && (
             <button
@@ -243,11 +239,11 @@ export default function ReportPage() {
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Télécharger HTML
+              {t('report.htmlDownload')}
             </button>
           )}
           <button onClick={handleDelete} className="btn-secondary text-red-600 border-red-200 hover:border-red-400">
-            Supprimer
+            {t('common.delete')}
           </button>
         </div>
       </div>
@@ -261,12 +257,12 @@ export default function ReportPage() {
 
           {sortedRecommendations.length > 0 && (
             <div className="card">
-              <h3 className="mb-5">Recommandations</h3>
+              <h3 className="mb-5">{t('report.recommendations')}</h3>
               <div className="space-y-4">
                 {sortedRecommendations.map((rec) => (
                   <div key={rec.id} className="flex gap-3 items-start">
                     <span className={`${PRIORITY_BADGE[rec.priority]} shrink-0 mt-0.5`}>
-                      {PRIORITY_LABEL[rec.priority]}
+                      {t(`priority.${rec.priority}`)}
                     </span>
                     <p className="text-sm text-slate-700 leading-relaxed">{rec.content}</p>
                   </div>
@@ -277,14 +273,14 @@ export default function ReportPage() {
         {/* Card modification */}
           {htmlContent && (
             <div className="card space-y-4">
-              <h3 className="text-sm font-medium text-slate-700 mb-0">Modifier le rapport</h3>
+              <h3 className="text-sm font-medium text-slate-700 mb-0">{t('report.modifyReport')}</h3>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">Provider IA</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">{t('report.providerLabel')}</p>
                 {htmlProviders.length === 0 ? (
                   <p className="text-sm text-slate-500">
-                    Aucun provider configuré —{' '}
-                    <Link to="/settings" className="text-blue-700 hover:underline">Paramètres</Link>
+                    {t('simulations.noProvider')}{' '}
+                    <Link to="/settings" className="text-blue-700 hover:underline">{t('simulations.noProviderLink')}</Link>
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
@@ -309,12 +305,12 @@ export default function ReportPage() {
 
               <div>
                 <label className="text-xs font-semibold uppercase tracking-widest text-slate-400 block mb-2">
-                  Instruction de modification
+                  {t('report.instructionLabel')}
                 </label>
                 <textarea
                   value={htmlInstruction}
                   onChange={(e) => setHtmlInstruction(e.target.value)}
-                  placeholder="Ex : ajoute une section risques, change la palette de couleurs…"
+                  placeholder={t('report.instructionPlaceholder')}
                   rows={3}
                   maxLength={2000}
                   className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2.5 resize-none focus:outline-none focus:border-blue-300 placeholder:text-slate-400"
@@ -326,7 +322,7 @@ export default function ReportPage() {
 
               <div className="flex items-center justify-between">
                 {htmlStatus === 'error' && (
-                  <p className="text-xs text-red-600">Échec de la modification — vérifiez le provider.</p>
+                  <p className="text-xs text-red-600">{t('report.applyError')}</p>
                 )}
                 <button
                   type="button"
@@ -351,7 +347,7 @@ export default function ReportPage() {
                       <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                     </svg>
                   )}
-                  {htmlStatus === 'loading' ? 'Application…' : 'Appliquer'}
+                  {htmlStatus === 'loading' ? t('report.applying') : t('report.applyBtn')}
                 </button>
               </div>
             </div>
@@ -362,8 +358,8 @@ export default function ReportPage() {
         {/* Colonne droite — sticky */}
         <div ref={htmlSectionRef} className="w-2/3 shrink-0 sticky top-4 space-y-3 print:hidden">
           <div>
-            <h2 className="text-slate-900">Rapport HTML</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Visualisez et modifiez le rapport HTML généré</p>
+            <h2 className="text-slate-900">{t('report.htmlReport')}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{t('report.htmlReportSubtitle')}</p>
           </div>
 
           
@@ -387,7 +383,7 @@ export default function ReportPage() {
                 >
                   <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                 </svg>
-                <span className="text-sm text-slate-400">Chargement du rapport HTML...</span>
+                <span className="text-sm text-slate-400">{t('report.htmlLoading')}</span>
               </div>
             ) : htmlContent ? (
               <>
@@ -396,7 +392,7 @@ export default function ReportPage() {
                 </div>
                 <iframe
                   srcDoc={htmlContent}
-                  title="Rapport HTML"
+                  title={t('report.htmlReport')}
                   className="w-full border-0 block"
                   style={{ height: 'calc(100vh - 180px)' }}
                   sandbox="allow-scripts"
@@ -404,7 +400,7 @@ export default function ReportPage() {
               </>
             ) : (
               <div className="px-5 py-10 text-center">
-                <p className="text-sm text-slate-400 italic">Aucun rapport HTML généré</p>
+                <p className="text-sm text-slate-400 italic">{t('report.htmlNone')}</p>
               </div>
             )}
           </div>
