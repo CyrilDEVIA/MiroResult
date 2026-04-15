@@ -42,7 +42,7 @@ api/prisma/*.db-journal
 
 # Dossiers
 Capture/
-documents/*.md
+documents/
 PORTS.md
 
 # Fichiers internes
