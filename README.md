@@ -26,8 +26,8 @@
 
 ```bash
 # Cloner le dépôt / Clone the repo
-git clone https://github.com/your-username/miroresult.git
-cd miroresult
+git clone https://github.com/CyrilDEVIA/MiroResult.git
+cd MiroResult
 
 # Installer les dépendances / Install dependencies
 npm install
@@ -90,12 +90,15 @@ src/
 ## Avant déploiement / Before deployment
 
 ```bash
-# 1. Remplir les variables d'environnement / Fill environment variables
+# 1. Copier et remplir les variables d'environnement
+#    Copy and fill environment variables
 cp api/.env.example api/.env
 cp frontend/.env.example frontend/.env
 
-# 2. Générer les configs de production / Generate production configs
-node ~/.claude/skills/6-prod/generate-configs.js
+# 2. Editer les fichiers .env avec vos valeurs
+#    Edit the .env files with your values
+nano api/.env
+nano frontend/.env
 ```
 
 ---
