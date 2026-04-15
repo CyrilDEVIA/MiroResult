@@ -1,8 +1,45 @@
 # MiroResult
 
-> **FR** — Outil de lecture et valorisation des outputs MiroFish. Transforme les données brutes de simulation multi-agents en rapports décisionnels visuels, générés par IA.
+> **FR** — Outil de lecture et valorisation des outputs [MiroFish](https://github.com/666ghj/MiroFish). Transforme les données brutes de simulation multi-agents en rapports décisionnels visuels, générés par IA.
 >
-> **EN** — A tool for reading and visualizing MiroFish simulation outputs. Transforms raw multi-agent simulation data into AI-generated visual decision reports.
+> **EN** — A tool for reading and visualizing [MiroFish](https://github.com/666ghj/MiroFish) simulation outputs. Transforms raw multi-agent simulation data into AI-generated visual decision reports.
+
+---
+
+## Comment ça fonctionne / How it works
+
+```
+MiroFish simulation
+      │
+      ▼
+  Export ZIP
+      │
+      ▼
+ MiroResult import
+      │
+      ▼
+  Analyse IA (double passe critique)
+      │
+      ▼
+  Rapport HTML visuel
+      │
+      ▼
+  Chat itératif pour affiner le rapport
+```
+
+**FR**
+1. Lancer une simulation dans [MiroFish](https://github.com/666ghj/MiroFish) et exporter les résultats en ZIP
+2. Importer le ZIP dans MiroResult
+3. L'IA analyse les données en deux passes (analyse + auto-critique)
+4. Un rapport HTML exploitable est généré, avec graphiques SVG inline
+5. Utiliser le chat intégré pour itérer et affiner le rapport
+
+**EN**
+1. Run a simulation in [MiroFish](https://github.com/666ghj/MiroFish) and export results as a ZIP
+2. Import the ZIP into MiroResult
+3. The AI analyses the data in two passes (analysis + self-critique)
+4. A ready-to-use HTML report is generated, with inline SVG charts
+5. Use the built-in chat to iterate and refine the report
 
 ---
 
@@ -21,6 +58,8 @@
 
 - Node.js 18+
 - npm
+- Une simulation [MiroFish](https://github.com/666ghj/MiroFish) exportée en ZIP
+- *A [MiroFish](https://github.com/666ghj/MiroFish) simulation exported as ZIP*
 
 ### Installation
 
@@ -46,6 +85,9 @@ API : `http://localhost:9904`
 MiroResult supporte tout provider compatible OpenAI (OpenRouter, Mistral, Groq, Anthropic, DeepSeek, Z.ai…).  
 *MiroResult supports any OpenAI-compatible provider (OpenRouter, Mistral, Groq, Anthropic, DeepSeek, Z.ai…).*
 
+Chaque utilisateur configure ses propres clés API directement dans l'interface.  
+*Each user configures their own API keys directly in the interface.*
+
 Dans l'interface, rendez-vous dans **Paramètres → Providers IA** pour configurer :  
 *In the app, go to **Settings → AI Providers** to configure:*
 
@@ -64,8 +106,9 @@ Dans l'interface, rendez-vous dans **Paramètres → Providers IA** pour configu
 - 📥 Import ZIP des simulations MiroFish
 - 🤖 Analyse IA avec double passe critique (analyse + auto-critique)
 - 📊 Rapport HTML visuel généré par le LLM (graphiques SVG inline)
+- 💬 Chat intégré pour itérer et affiner le rapport
 - 🔄 Historique et comparaison de rapports
-- 🔌 Multi-providers IA configurables
+- 🔌 Multi-providers IA configurables par utilisateur
 - 🔐 Authentification JWT
 
 ---
@@ -100,6 +143,12 @@ cp frontend/.env.example frontend/.env
 nano api/.env
 nano frontend/.env
 ```
+
+---
+
+## Lien / Related
+
+- [MiroFish](https://github.com/666ghj/MiroFish) — le simulateur multi-agents dont MiroResult exploite les outputs / the multi-agent simulator whose outputs MiroResult processes
 
 ---
 
