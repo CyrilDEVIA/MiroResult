@@ -4,6 +4,9 @@
 >
 > **EN** — A tool for reading and visualizing [MiroFish](https://github.com/666ghj/MiroFish) simulation outputs. Transforms raw multi-agent simulation data into AI-generated visual decision reports.
 
+![Dashboard](docs/screenshot-dashboard.png)
+![Simulation](docs/screenshot-simulation.png)
+
 ---
 
 ## Comment ça fonctionne / How it works
@@ -110,6 +113,31 @@ Dans l'interface, rendez-vous dans **Paramètres → Providers IA** pour configu
 - 🔄 Historique et comparaison de rapports
 - 🔌 Multi-providers IA configurables par utilisateur
 - 🔐 Authentification JWT
+
+---
+
+## Contribuer / Contributing
+
+**FR**
+MiroResult est un projet open source, fonctionnel mais perfectible. Si tu utilises MiroFish et que tu veux améliorer cet outil, les contributions sont les bienvenues — qu'il s'agisse de corriger un bug, d'améliorer l'interface, d'ajouter une langue ou de proposer une nouvelle fonctionnalité.
+
+Axes d'amélioration identifiés :
+- 🎨 Esthétique et ergonomie de l'interface
+- 🌍 Support multilingue (actuellement FR/EN)
+- 📄 Qualité et richesse des rapports générés
+- 🧪 Tests automatisés
+- 📦 Packaging / déploiement simplifié
+
+**EN**
+MiroResult is an open source project — functional, but with room to grow. If you use MiroFish and want to improve this tool, contributions are very welcome — bug fixes, UI improvements, new languages, new features, anything goes.
+
+```bash
+# Fork le dépôt, puis :
+git checkout -b feature/ma-contribution
+git commit -m "feat: ma contribution"
+git push origin feature/ma-contribution
+# Ouvre une Pull Request
+```
 
 ---
 
