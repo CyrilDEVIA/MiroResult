@@ -96,10 +96,15 @@ It is recommended to document, for each MiroResult version, the MiroFish version
 
 ### Versions testées / Tested versions
 
-| MiroResult version | MiroFish version / commit | Status |
-|---|---|---|
-| Current development version | To be documented | Experimental |
+**FR**
 
+La compatibilité exacte avec un commit ou une version MiroFish spécifique n’a pas encore été formellement documentée.  
+MiroResult doit donc être considéré comme expérimental jusqu’à ce que des versions ou commits testés soient listés ici.
+
+**EN**
+
+Exact compatibility with a specific MiroFish commit or version has not yet been formally documented.  
+MiroResult should therefore be considered experimental until tested versions or commits are listed here.
 ---
 
 ## Structure ZIP attendue / Expected ZIP Structure
