@@ -105,6 +105,7 @@ MiroResult doit donc être considéré comme expérimental jusqu’à ce que des
 
 Exact compatibility with a specific MiroFish commit or version has not yet been formally documented.  
 MiroResult should therefore be considered experimental until tested versions or commits are listed here.
+
 ---
 
 ## Structure ZIP attendue / Expected ZIP Structure
