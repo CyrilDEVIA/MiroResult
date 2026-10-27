@@ -6,6 +6,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
+    "test": "node -r ts-node/register/transpile-only --test tests/*.test.ts",
     "format": "prettier --write .",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node prisma/seed.ts",

@@ -158,41 +158,59 @@ export function extractAndParseZip(filePath: string): ParsedZip {
 
 // ─── Scoring adaptatif ZIP ───────────────────────────────────────────────────
 
+// Une configuration valide est un objet non vide. Un objet vide, un tableau,
+// une valeur scalaire ou une absence ne comptent pas comme configuration.
+function isNonEmptyObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value as Record<string, unknown>).length > 0
+  )
+}
+
+// La complétion ne s'appuie plus sur la présence de state.json mais sur un
+// statut d'exécution explicitement « completed » (comparaison insensible à la casse).
+function isCompletedRunState(runState: unknown): boolean {
+  if (typeof runState !== 'object' || runState === null || Array.isArray(runState)) return false
+  const status = (runState as Record<string, unknown>).runner_status
+  return typeof status === 'string' && status.toLowerCase() === 'completed'
+}
+
 export function computeScore(parsed: ParsedZip): ZipScores {
-  const scores: Record<string, number> = {}
-  let total = 0
-  let count = 0
+  // Les quatre dimensions participent toujours au calcul : une donnée absente
+  // ou vide reçoit 0 au lieu d'être exclue du dénominateur.
+  const flatProfiles = (parsed.profiles as unknown[]).flat()
 
-  if (parsed.actions.length > 0) {
-    const actionScore = Math.min(100, Math.round((parsed.actions.length / 50) * 100))
-    scores.activity = actionScore
-    total += actionScore
-    count++
-  }
+  const activity =
+    parsed.actions.length > 0
+      ? Math.min(100, Math.round((parsed.actions.length / 50) * 100))
+      : 0
 
-  if (parsed.profiles.length > 0) {
-    const flat = (parsed.profiles as unknown[]).flat()
-    const profileScore = Math.min(100, Math.round((flat.length / 20) * 100))
-    scores.reach = profileScore
-    total += profileScore
-    count++
-  }
+  const reach =
+    flatProfiles.length > 0
+      ? Math.min(100, Math.round((flatProfiles.length / 20) * 100))
+      : 0
 
-  if (parsed.simulation_config) {
-    scores.configuration = 100
-    total += 100
-    count++
-  }
+  const configuration = isNonEmptyObject(parsed.simulation_config) ? 100 : 0
 
-  if (parsed.state) {
-    scores.completion = 100
-    total += 100
-    count++
-  }
+  const completion = isCompletedRunState(parsed.run_state) ? 100 : 0
 
-  const global = count > 0 ? Math.round(total / count) : 0
+  const scores: Record<string, number> = { activity, reach, configuration, completion }
+  const global = Math.round((activity + reach + configuration + completion) / 4)
 
   return { global, dimensions: scores }
+}
+
+// Conditions nécessaires pour considérer une simulation comme complète :
+// configuration valide, exécution explicitement terminée, actions et profils présents.
+function hasRequiredEvidence(scores: ZipScores): boolean {
+  const { activity = 0, reach = 0, configuration = 0, completion = 0 } = scores.dimensions
+  return configuration > 0 && completion > 0 && activity > 0 && reach > 0
+}
+
+function isCompleteSimulation(scores: ZipScores): boolean {
+  return hasRequiredEvidence(scores) && scores.global >= 70
 }
 
 // ─── Helpers pour le rapport ZIP ─────────────────────────────────────────────
@@ -215,10 +233,24 @@ export function buildZipScoresDetail(
   return detail
 }
 
-export function summarizeZip(globalScore: number): string {
-  if (globalScore >= 70) return 'Simulation complète et bien structurée. Les données sont exploitables pour analyse.'
-  if (globalScore >= 40) return 'Simulation partiellement complète. Certaines données sont manquantes ou incomplètes.'
-  return 'Simulation incomplète. Des fichiers essentiels sont absents — vérifiez l\'export MiroFish.'
+export function summarizeZip(scores: ZipScores): string {
+  const { activity = 0, reach = 0, configuration = 0, completion = 0 } = scores.dimensions
+
+  const hasConfiguration = configuration > 0
+  const hasCompletion = completion > 0
+  const hasActions = activity > 0
+  const hasProfiles = reach > 0
+
+  // « Complète » n'est autorisé que sur preuves réunies ET seuil global atteint.
+  if (hasConfiguration && hasCompletion && hasActions && hasProfiles) {
+    if (scores.global >= 70) {
+      return 'Simulation complète et bien structurée. Les données sont exploitables pour analyse.'
+    }
+    return 'Simulation partiellement complète. Certaines données sont manquantes ou incomplètes.'
+  }
+
+  // Toute preuve essentielle absente : archive vide ou incomplète.
+  return "Simulation incomplète. Des fichiers essentiels ou des preuves d'exécution sont absents — vérifiez l'export MiroFish."
 }
 
 // ─── Recommandations ZIP ─────────────────────────────────────────────────────
@@ -227,36 +259,54 @@ export function generateZipRecommendations(
   scores: ZipScores
 ): Array<{ content: string; priority: 'high' | 'medium' | 'low' }> {
   const recs: Array<{ content: string; priority: 'high' | 'medium' | 'low' }> = []
+  const { activity = 0, reach = 0, configuration = 0, completion = 0 } = scores.dimensions
 
-  if (!scores.dimensions.activity || scores.dimensions.activity < 50) {
+  // Aucune action → preuve d'exécution manquante (et non un volume à augmenter).
+  if (activity === 0) {
+    recs.push({
+      content:
+        "Aucune action détectée. L'archive est incomplète ou les preuves d'exécution sont absentes — vérifiez l'export MiroFish.",
+      priority: 'high',
+    })
+  } else if (activity < 50) {
     recs.push({
       content: "Volume d'actions simulées faible. Augmenter le nombre d'agents ou la durée de simulation.",
       priority: 'high',
     })
   }
 
-  if (!scores.dimensions.reach || scores.dimensions.reach < 50) {
+  // Aucun profil → données de profils absentes (et non une base à enrichir).
+  if (reach === 0) {
+    recs.push({
+      content:
+        "Aucun profil détecté. Les données de profils sont absentes de l'archive — vérifiez l'export MiroFish.",
+      priority: 'high',
+    })
+  } else if (reach < 50) {
     recs.push({
       content: 'Peu de profils simulés détectés. Enrichir la base de profils pour une simulation plus représentative.',
       priority: 'high',
     })
   }
 
-  if (!scores.dimensions.configuration) {
+  if (configuration === 0) {
     recs.push({
-      content: "Fichier simulation_config.json absent du ZIP. Vérifier l'export MiroFish.",
+      content:
+        "Configuration absente ou vide (simulation_config.json manquant, non valide ou vide). Vérifier l'export MiroFish.",
       priority: 'high',
     })
   }
 
-  if (!scores.dimensions.completion) {
+  if (completion === 0) {
     recs.push({
-      content: "Fichier state.json absent. La simulation s'est peut-être interrompue avant la fin.",
+      content:
+        "run_state.json absent, invalide ou sans statut « completed ». Aucune preuve que la simulation s'est terminée.",
       priority: 'medium',
     })
   }
 
-  if (scores.global >= 70) {
+  // Recommandation positive réservée aux simulations réellement complètes.
+  if (isCompleteSimulation(scores)) {
     recs.push({
       content: 'Simulation complète et bien structurée. Les données sont exploitables pour analyse.',
       priority: 'low',

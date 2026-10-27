@@ -18,6 +18,7 @@ const llmLimiter = rateLimit({
   message: { error: 'Limite de requêtes IA atteinte (10/heure). Réessayez plus tard.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 })
 
 const simulationParamsSchema = z.object({

@@ -63,7 +63,7 @@ router.post(
 
         const scores = computeScore(parsed)
         const scoresDetail = buildZipScoresDetail(scores)
-        const summary = summarizeZip(scores.global)
+        const summary = summarizeZip(scores)
         const v2 = computeAdvancedMetrics({
           actions: parsed.actions,
           profiles: parsed.profiles,
