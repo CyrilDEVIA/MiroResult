@@ -1,11 +1,14 @@
 {
   "name": "MiroResult",
   "private": true,
+  "workspaces": ["api", "frontend"],
   "scripts": {
     "dev": "concurrently \"cd api && npm run dev\" \"cd frontend && npm run dev\"",
     "dev:api": "cd api && npm run dev",
     "dev:front": "cd frontend && npm run dev",
-    "build": "npm run build --prefix frontend"
+    "build": "npm run build --prefix frontend",
+    "audit": "npm audit --workspaces --include-workspace-root",
+    "audit:fix": "npm audit fix --workspaces --include-workspace-root"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
